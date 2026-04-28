@@ -5,3 +5,5 @@ export * from "./products";
 export * from "./product-variants";
 export * from "./product-categories";
 export * from "./product-images";
+export * from "./inventory";
+export * from "./stock-movements";
