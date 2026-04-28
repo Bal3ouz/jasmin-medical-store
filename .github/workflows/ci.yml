@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.2.0" }
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test (lib + db with pglite)
+        run: bun run test
+
+      - name: Migration drift check
+        run: |
+          cd packages/db
+          bun run generate
+          if [[ -n $(git status --porcelain migrations/) ]]; then
+            echo "::error::Drizzle schema drift — run \`bun db:generate\` and commit"
+            git status --short migrations/
+            exit 1
+          fi
