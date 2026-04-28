@@ -9,3 +9,11 @@ export { Marquee, type MarqueeProps } from "./components/Marquee";
 export { AiryContainer } from "./components/AiryContainer";
 export { TealHeroPanel } from "./components/TealHeroPanel";
 export { EditorialPanel } from "./components/EditorialPanel";
+export {
+  H1Editorial,
+  H2Section,
+  H3Card,
+  BodyText,
+  LabelEyebrow,
+} from "./components/typography";
+export { PriceTag, type PriceTagProps } from "./components/PriceTag";
