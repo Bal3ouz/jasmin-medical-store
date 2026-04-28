@@ -1,0 +1,283 @@
+export interface SeedVariant {
+  sku: string;
+  name: string;
+  priceTnd: string;
+  isDefault?: boolean;
+}
+
+export interface SeedProduct {
+  id: string;
+  slug: string;
+  name: string;
+  brandSlug: string;
+  categorySlug: string;
+  shortDescription: string;
+  description: string;
+  ingredients?: string;
+  usage?: string;
+  hasVariants: boolean;
+  sku?: string;
+  priceTnd?: string;
+  variants?: SeedVariant[];
+  reorderPoint: number;
+  initialStock: number;
+}
+
+const cosVisage = "visage";
+const cosCorps = "corps";
+const cosSolaire = "solaire";
+
+export const PRODUCT_SEED: SeedProduct[] = [
+  // SVR
+  { id: "70000000-0000-4000-8000-000000000001", slug: "svr-sebiaclear-creme",
+    name: "SVR Sebiaclear Crème Anti-Imperfections 40ml", brandSlug: "svr", categorySlug: cosVisage,
+    shortDescription: "Crème ciblée anti-imperfections pour peaux mixtes à grasses.",
+    description: "Sebiaclear Crème associe AHA et niacinamide pour réduire visiblement les imperfections en respectant l'équilibre cutané.",
+    hasVariants: false, sku: "SVR-SC-40", priceTnd: "32.900", reorderPoint: 6, initialStock: 24 },
+  { id: "70000000-0000-4000-8000-000000000002", slug: "svr-sebiaclear-gel-moussant",
+    name: "SVR Sebiaclear Gel Moussant 200ml", brandSlug: "svr", categorySlug: cosVisage,
+    shortDescription: "Nettoyant moussant purifiant.",
+    description: "Élimine excès de sébum et impuretés sans dessécher la peau.",
+    hasVariants: false, sku: "SVR-SCG-200", priceTnd: "29.500", reorderPoint: 6, initialStock: 30 },
+  { id: "70000000-0000-4000-8000-000000000003", slug: "svr-sun-secure-spf50",
+    name: "SVR Sun Secure SPF50+", brandSlug: "svr", categorySlug: cosSolaire,
+    shortDescription: "Haute protection solaire, finition invisible.",
+    description: "Protection très haute UVA/UVB, photo-stable, résistante à l'eau.",
+    hasVariants: true, reorderPoint: 4,
+    variants: [
+      { sku: "SVR-SUN-CR-50", name: "Crème 50ml", priceTnd: "47.000", isDefault: true },
+      { sku: "SVR-SUN-LT-200", name: "Lait 200ml", priceTnd: "59.000" },
+      { sku: "SVR-SUN-BR-200", name: "Brume 200ml", priceTnd: "55.000" },
+    ], initialStock: 12 },
+  { id: "70000000-0000-4000-8000-000000000004", slug: "svr-densitium-creme",
+    name: "SVR Densitium Crème", brandSlug: "svr", categorySlug: cosVisage,
+    shortDescription: "Soin global anti-âge densifiant.",
+    description: "Restructure et redensifie la peau dès 50 ans.",
+    hasVariants: false, sku: "SVR-DEN-50", priceTnd: "65.000", reorderPoint: 4, initialStock: 14 },
+
+  // Avène
+  { id: "70000000-0000-4000-8000-000000000010", slug: "avene-cleanance-gel",
+    name: "Avène Cleanance Gel Nettoyant", brandSlug: "avene", categorySlug: cosVisage,
+    shortDescription: "Gel doux purifiant pour peaux à imperfections.",
+    description: "Nettoie en douceur sans agresser, base lavante sans savon.",
+    hasVariants: true, reorderPoint: 6,
+    variants: [
+      { sku: "AVE-CLG-200", name: "200ml", priceTnd: "26.500", isDefault: true },
+      { sku: "AVE-CLG-400", name: "400ml", priceTnd: "42.000" },
+    ], initialStock: 30 },
+  { id: "70000000-0000-4000-8000-000000000011", slug: "avene-eau-thermale",
+    name: "Avène Eau Thermale en spray", brandSlug: "avene", categorySlug: cosVisage,
+    shortDescription: "Apaise, adoucit, calme la peau.",
+    description: "Eau thermale d'Avène, riche en silicates et oligo-éléments.",
+    hasVariants: true, reorderPoint: 8,
+    variants: [
+      { sku: "AVE-EAU-50", name: "50ml", priceTnd: "9.500" },
+      { sku: "AVE-EAU-150", name: "150ml", priceTnd: "21.000", isDefault: true },
+      { sku: "AVE-EAU-300", name: "300ml", priceTnd: "32.000" },
+    ], initialStock: 50 },
+  { id: "70000000-0000-4000-8000-000000000012", slug: "avene-hydrance-creme",
+    name: "Avène Hydrance Crème Hydratante 40ml", brandSlug: "avene", categorySlug: cosVisage,
+    shortDescription: "Hydratation 24h pour peaux sensibles.",
+    description: "Riche, fondante, restaure la barrière cutanée.",
+    hasVariants: false, sku: "AVE-HYD-40", priceTnd: "38.500", reorderPoint: 5, initialStock: 18 },
+
+  // La Roche-Posay
+  { id: "70000000-0000-4000-8000-000000000020", slug: "lrp-effaclar-duo",
+    name: "La Roche-Posay Effaclar Duo+M 40ml", brandSlug: "la-roche-posay", categorySlug: cosVisage,
+    shortDescription: "Soin anti-imperfections correcteur ciblé.",
+    description: "Réduit boutons, marques et points noirs.",
+    hasVariants: false, sku: "LRP-EFF-40", priceTnd: "42.000", reorderPoint: 6, initialStock: 22 },
+  { id: "70000000-0000-4000-8000-000000000021", slug: "lrp-anthelios-spf50",
+    name: "La Roche-Posay Anthelios SPF50+", brandSlug: "la-roche-posay", categorySlug: cosSolaire,
+    shortDescription: "Très haute protection visage, ultra-fluide.",
+    description: "Protège des UVA longs, UVB et de la lumière bleue.",
+    hasVariants: true, reorderPoint: 4,
+    variants: [
+      { sku: "LRP-ANT-CR-50", name: "Crème 50ml", priceTnd: "55.000", isDefault: true },
+      { sku: "LRP-ANT-FL-50", name: "Fluide 50ml", priceTnd: "55.000" },
+    ], initialStock: 14 },
+  { id: "70000000-0000-4000-8000-000000000022", slug: "lrp-cicaplast-baume",
+    name: "La Roche-Posay Cicaplast Baume B5+", brandSlug: "la-roche-posay", categorySlug: cosCorps,
+    shortDescription: "Baume réparateur multi-usage.",
+    description: "Apaise, répare, hydrate les peaux fragilisées.",
+    hasVariants: false, sku: "LRP-CIC-40", priceTnd: "27.500", reorderPoint: 6, initialStock: 25 },
+
+  // Vichy
+  { id: "70000000-0000-4000-8000-000000000030", slug: "vichy-mineral-89",
+    name: "Vichy Minéral 89 Booster Quotidien 50ml", brandSlug: "vichy", categorySlug: cosVisage,
+    shortDescription: "Concentré fortifiant à l'acide hyaluronique.",
+    description: "Renforce et repulpe la peau en 1 minute.",
+    hasVariants: false, sku: "VIC-M89-50", priceTnd: "74.000", reorderPoint: 4, initialStock: 16 },
+  { id: "70000000-0000-4000-8000-000000000031", slug: "vichy-liftactiv-serum",
+    name: "Vichy Liftactiv Sérum Anti-Rides 30ml", brandSlug: "vichy", categorySlug: cosVisage,
+    shortDescription: "Sérum à effet liftant immédiat.",
+    description: "Acide hyaluronique fragmenté + complexe rhamnose.",
+    hasVariants: false, sku: "VIC-LIF-30", priceTnd: "92.000", reorderPoint: 3, initialStock: 10 },
+  { id: "70000000-0000-4000-8000-000000000032", slug: "vichy-capital-soleil",
+    name: "Vichy Capital Soleil SPF50+", brandSlug: "vichy", categorySlug: cosSolaire,
+    shortDescription: "Protection solaire haute tolérance.",
+    description: "Texture légère, résistante à l'eau.",
+    hasVariants: true, reorderPoint: 4,
+    variants: [
+      { sku: "VIC-CAP-LC-300", name: "Lait corps 300ml", priceTnd: "59.000", isDefault: true },
+      { sku: "VIC-CAP-CR-50", name: "Crème visage 50ml", priceTnd: "49.000" },
+    ], initialStock: 12 },
+
+  // Bioderma
+  { id: "70000000-0000-4000-8000-000000000040", slug: "bioderma-sensibio-h2o",
+    name: "Bioderma Sensibio H2O Eau Micellaire", brandSlug: "bioderma", categorySlug: cosVisage,
+    shortDescription: "Démaquillage tout-en-un.",
+    description: "Démaquille, nettoie, apaise les peaux sensibles.",
+    hasVariants: true, reorderPoint: 8,
+    variants: [
+      { sku: "BIO-SEN-250", name: "250ml", priceTnd: "27.000", isDefault: true },
+      { sku: "BIO-SEN-500", name: "500ml", priceTnd: "44.000" },
+    ], initialStock: 40 },
+  { id: "70000000-0000-4000-8000-000000000041", slug: "bioderma-sebium-pore",
+    name: "Bioderma Sébium Pore Refiner 30ml", brandSlug: "bioderma", categorySlug: cosVisage,
+    shortDescription: "Concentré resserre-pores.",
+    description: "Texture fluide, fini matifié.",
+    hasVariants: false, sku: "BIO-SEB-30", priceTnd: "38.000", reorderPoint: 4, initialStock: 14 },
+  { id: "70000000-0000-4000-8000-000000000042", slug: "bioderma-atoderm-creme",
+    name: "Bioderma Atoderm Crème 200ml", brandSlug: "bioderma", categorySlug: cosCorps,
+    shortDescription: "Crème ultra-nourrissante peaux sèches.",
+    description: "Restaure la barrière cutanée.",
+    hasVariants: false, sku: "BIO-ATO-200", priceTnd: "39.000", reorderPoint: 5, initialStock: 20 },
+
+  // Nuxe
+  { id: "70000000-0000-4000-8000-000000000050", slug: "nuxe-creme-fraiche",
+    name: "Nuxe Crème Fraîche de Beauté 30ml", brandSlug: "nuxe", categorySlug: cosVisage,
+    shortDescription: "Hydratation fraîche 48h.",
+    description: "Sensorielle, lait végétal apaisant.",
+    hasVariants: false, sku: "NUX-CFB-30", priceTnd: "39.000", reorderPoint: 5, initialStock: 18 },
+  { id: "70000000-0000-4000-8000-000000000051", slug: "nuxe-huile-prodigieuse",
+    name: "Nuxe Huile Prodigieuse", brandSlug: "nuxe", categorySlug: cosCorps,
+    shortDescription: "Huile multi-fonctions visage, corps, cheveux.",
+    description: "Iconique, parfum sensuel, 7 huiles précieuses.",
+    hasVariants: true, reorderPoint: 5,
+    variants: [
+      { sku: "NUX-HP-50", name: "50ml", priceTnd: "42.000", isDefault: true },
+      { sku: "NUX-HP-100", name: "100ml", priceTnd: "69.000" },
+    ], initialStock: 18 },
+  { id: "70000000-0000-4000-8000-000000000052", slug: "nuxe-reve-de-miel",
+    name: "Nuxe Rêve de Miel Baume Lèvres 15g", brandSlug: "nuxe", categorySlug: cosVisage,
+    shortDescription: "Baume nourrissant et réparateur.",
+    description: "Texture fondante au miel et aux huiles précieuses.",
+    hasVariants: false, sku: "NUX-RDM-15", priceTnd: "19.500", reorderPoint: 8, initialStock: 30 },
+
+  // Matériel médical (note: brandSlug uses 'vichy' as a fallback because the seed only ships 6 brands)
+  { id: "70000000-0000-4000-8000-000000000060", slug: "tensio-omron-m3",
+    name: "Tensiomètre Omron M3 Comfort", brandSlug: "vichy", categorySlug: "tension",
+    shortDescription: "Tensiomètre brassard automatique.",
+    description: "Brassard préformé Intelli Wrap, technologie Intellisense.",
+    hasVariants: false, sku: "OMR-M3", priceTnd: "169.000", reorderPoint: 2, initialStock: 6 },
+  { id: "70000000-0000-4000-8000-000000000061", slug: "tensio-omron-m7",
+    name: "Tensiomètre Omron M7 Intelli IT", brandSlug: "vichy", categorySlug: "tension",
+    shortDescription: "Tensiomètre connecté Bluetooth.",
+    description: "Détection AFib, application Omron Connect.",
+    hasVariants: false, sku: "OMR-M7", priceTnd: "219.000", reorderPoint: 2, initialStock: 4 },
+  { id: "70000000-0000-4000-8000-000000000062", slug: "lecteur-glycemie-accuchek",
+    name: "Lecteur de glycémie Accu-Chek Performa", brandSlug: "vichy", categorySlug: "diabete",
+    shortDescription: "Lecteur de glycémie compact.",
+    description: "Mesure rapide, mémoire 500 résultats.",
+    hasVariants: false, sku: "ACK-PER", priceTnd: "89.000", reorderPoint: 3, initialStock: 8 },
+  { id: "70000000-0000-4000-8000-000000000063", slug: "bandelettes-accuchek",
+    name: "Bandelettes Accu-Chek Performa", brandSlug: "vichy", categorySlug: "diabete",
+    shortDescription: "Bandelettes pour Accu-Chek Performa.",
+    description: "Bandelettes réactives compatibles.",
+    hasVariants: true, reorderPoint: 6,
+    variants: [
+      { sku: "ACK-BD-25", name: "Boîte de 25", priceTnd: "29.500" },
+      { sku: "ACK-BD-50", name: "Boîte de 50", priceTnd: "55.000", isDefault: true },
+      { sku: "ACK-BD-100", name: "Boîte de 100", priceTnd: "99.000" },
+    ], initialStock: 30 },
+  { id: "70000000-0000-4000-8000-000000000064", slug: "aerosol-pneumatique",
+    name: "Aérosol pneumatique standard", brandSlug: "vichy", categorySlug: "aerosol",
+    shortDescription: "Aérosol pneumatique pour adulte et enfant.",
+    description: "Compresseur silencieux, masques inclus.",
+    hasVariants: false, sku: "AER-PN-STD", priceTnd: "145.000", reorderPoint: 2, initialStock: 5 },
+  { id: "70000000-0000-4000-8000-000000000065", slug: "fauteuil-roulant-standard",
+    name: "Fauteuil roulant standard pliable", brandSlug: "vichy", categorySlug: "fauteuils",
+    shortDescription: "Fauteuil léger pliable, 18 kg.",
+    description: "Cadre acier, accoudoirs amovibles, repose-pieds réglables.",
+    hasVariants: false, sku: "FR-STD", priceTnd: "720.000", reorderPoint: 1, initialStock: 3 },
+  { id: "70000000-0000-4000-8000-000000000066", slug: "fauteuil-roulant-xl",
+    name: "Fauteuil roulant XL renforcé", brandSlug: "vichy", categorySlug: "fauteuils",
+    shortDescription: "Fauteuil renforcé jusqu'à 160 kg.",
+    description: "Cadre acier renforcé, assise large 50 cm.",
+    hasVariants: false, sku: "FR-XL", priceTnd: "950.000", reorderPoint: 1, initialStock: 2 },
+
+  // Orthopédie
+  { id: "70000000-0000-4000-8000-000000000070", slug: "bequille-axillaire",
+    name: "Béquille axillaire ajustable (paire)", brandSlug: "vichy", categorySlug: "aides-marche",
+    shortDescription: "Paire de béquilles axillaires.",
+    description: "Hauteur ajustable, embouts antidérapants.",
+    hasVariants: false, sku: "ORT-BEQ", priceTnd: "45.000", reorderPoint: 3, initialStock: 8 },
+  { id: "70000000-0000-4000-8000-000000000071", slug: "canne-anglaise",
+    name: "Canne anglaise ergonomique", brandSlug: "vichy", categorySlug: "aides-marche",
+    shortDescription: "Canne anglaise avec poignée ergonomique.",
+    description: "Aluminium léger, 7 réglages de hauteur.",
+    hasVariants: false, sku: "ORT-CAN", priceTnd: "35.000", reorderPoint: 4, initialStock: 12 },
+  { id: "70000000-0000-4000-8000-000000000072", slug: "ceinture-lombaire",
+    name: "Ceinture lombaire de soutien", brandSlug: "vichy", categorySlug: "lombaire",
+    shortDescription: "Ceinture lombaire soutien quotidien.",
+    description: "Tissu respirant, hauteur 26 cm.",
+    hasVariants: true, reorderPoint: 4,
+    variants: [
+      { sku: "ORT-LOM-S", name: "Taille S", priceTnd: "65.000" },
+      { sku: "ORT-LOM-M", name: "Taille M", priceTnd: "65.000", isDefault: true },
+      { sku: "ORT-LOM-L", name: "Taille L", priceTnd: "65.000" },
+      { sku: "ORT-LOM-XL", name: "Taille XL", priceTnd: "70.000" },
+    ], initialStock: 16 },
+  { id: "70000000-0000-4000-8000-000000000073", slug: "genouillere-ligamentaire",
+    name: "Genouillère ligamentaire", brandSlug: "vichy", categorySlug: "genou",
+    shortDescription: "Maintien latéral du genou.",
+    description: "Renforts latéraux, sangles ajustables.",
+    hasVariants: true, reorderPoint: 4,
+    variants: [
+      { sku: "ORT-GEN-S", name: "Taille S", priceTnd: "55.000" },
+      { sku: "ORT-GEN-M", name: "Taille M", priceTnd: "55.000", isDefault: true },
+      { sku: "ORT-GEN-L", name: "Taille L", priceTnd: "55.000" },
+    ], initialStock: 12 },
+  { id: "70000000-0000-4000-8000-000000000074", slug: "chevillere-ajustable",
+    name: "Chevillère ajustable", brandSlug: "vichy", categorySlug: "cheville",
+    shortDescription: "Chevillère taille unique ajustable.",
+    description: "Bandes auto-agrippantes, néoprène respirant.",
+    hasVariants: false, sku: "ORT-CHV", priceTnd: "39.000", reorderPoint: 4, initialStock: 14 },
+
+  // Bébé / Parapharmacie
+  { id: "70000000-0000-4000-8000-000000000080", slug: "mustela-hydra-bebe",
+    name: "Mustela Hydra Bébé Crème Visage 40ml", brandSlug: "nuxe", categorySlug: "bebe",
+    shortDescription: "Hydratation visage bébé.",
+    description: "Avocat Perseose, hypoallergénique.",
+    hasVariants: false, sku: "MUS-HYD-40", priceTnd: "29.000", reorderPoint: 5, initialStock: 18 },
+  { id: "70000000-0000-4000-8000-000000000081", slug: "mustela-2en1-gel",
+    name: "Mustela 2 en 1 Gel lavant cheveux & corps", brandSlug: "nuxe", categorySlug: "bebe",
+    shortDescription: "Gel lavant doux 2 en 1.",
+    description: "Sans savon, sans paraben.",
+    hasVariants: true, reorderPoint: 5,
+    variants: [
+      { sku: "MUS-2EN1-200", name: "200ml", priceTnd: "21.000", isDefault: true },
+      { sku: "MUS-2EN1-500", name: "500ml", priceTnd: "39.000" },
+    ], initialStock: 24 },
+  { id: "70000000-0000-4000-8000-000000000082", slug: "liniment-oleocalcaire",
+    name: "Liniment oléo-calcaire 500ml", brandSlug: "nuxe", categorySlug: "bebe",
+    shortDescription: "Soin de change naturel.",
+    description: "Huile d'olive et eau de chaux.",
+    hasVariants: false, sku: "LIN-500", priceTnd: "12.000", reorderPoint: 8, initialStock: 30 },
+  { id: "70000000-0000-4000-8000-000000000083", slug: "compresses-steriles",
+    name: "Compresses stériles 7,5 × 7,5 cm", brandSlug: "nuxe", categorySlug: "premiers-soins",
+    shortDescription: "Boîte de 25 compresses.",
+    description: "Compresses non tissées, individuellement emballées.",
+    hasVariants: false, sku: "PS-CMP-25", priceTnd: "6.500", reorderPoint: 10, initialStock: 60 },
+  { id: "70000000-0000-4000-8000-000000000084", slug: "thermometre-frontal",
+    name: "Thermomètre infrarouge frontal", brandSlug: "vichy", categorySlug: "premiers-soins",
+    shortDescription: "Mesure sans contact en 1 seconde.",
+    description: "Affichage rétroéclairé, mémoire 32 résultats.",
+    hasVariants: false, sku: "TH-IR", priceTnd: "79.000", reorderPoint: 3, initialStock: 9 },
+  { id: "70000000-0000-4000-8000-000000000085", slug: "forte-pharma-energie",
+    name: "Forté Pharma Energie 4G — 30 comprimés", brandSlug: "nuxe", categorySlug: "complements",
+    shortDescription: "Complément vitalité 4 actions.",
+    description: "Ginseng, gelée royale, vitamines, magnésium.",
+    hasVariants: false, sku: "FP-EN-30", priceTnd: "28.000", reorderPoint: 6, initialStock: 20 },
+];

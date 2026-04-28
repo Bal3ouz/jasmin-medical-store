@@ -1,0 +1,20 @@
+export const CUSTOMER_SEED = [
+  { id: "a0000000-0000-4000-8000-000000000001", email: "salma.benali@example.tn", fullName: "Salma Ben Ali", phone: "+216 22 110 220", marketingConsent: true, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-000000000002", email: "mohamed.trabelsi@example.tn", fullName: "Mohamed Trabelsi", phone: "+216 98 233 411", marketingConsent: false, newsletterSubscribed: false },
+  { id: "a0000000-0000-4000-8000-000000000003", email: "yasmine.bouzid@example.tn", fullName: "Yasmine Bouzid", phone: "+216 24 556 178", marketingConsent: true, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-000000000004", email: "karim.mansouri@example.tn", fullName: "Karim Mansouri", phone: "+216 95 774 332", marketingConsent: true, newsletterSubscribed: false },
+  { id: "a0000000-0000-4000-8000-000000000005", email: "nour.bensalah@example.tn", fullName: "Nour Ben Salah", phone: "+216 27 882 011", marketingConsent: true, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-000000000006", email: "ahmed.karoui@example.tn", fullName: "Ahmed Karoui", phone: "+216 50 113 274", marketingConsent: false, newsletterSubscribed: false },
+  { id: "a0000000-0000-4000-8000-000000000007", email: "imen.gharbi@example.tn", fullName: "Imen Gharbi", phone: "+216 21 990 008", marketingConsent: true, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-000000000008", email: "wassim.benammar@example.tn", fullName: "Wassim Ben Ammar", phone: "+216 99 102 654", marketingConsent: false, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-000000000009", email: "houda.mejri@example.tn", fullName: "Houda Mejri", phone: "+216 28 114 887", marketingConsent: true, newsletterSubscribed: true },
+  { id: "a0000000-0000-4000-8000-00000000000a", email: "tarek.riahi@example.tn", fullName: "Tarek Riahi", phone: "+216 96 224 117", marketingConsent: true, newsletterSubscribed: false },
+];
+
+export const ADDRESS_SEED = [
+  { customerEmail: "salma.benali@example.tn", fullName: "Salma Ben Ali", phone: "+216 22 110 220", street: "12 rue Ibn Khaldoun", city: "Nabeul", postalCode: "8000", governorate: "Nabeul", isDefault: true },
+  { customerEmail: "mohamed.trabelsi@example.tn", fullName: "Mohamed Trabelsi", phone: "+216 98 233 411", street: "45 av. de la Liberté", city: "Tunis", postalCode: "1002", governorate: "Tunis", isDefault: true },
+  { customerEmail: "yasmine.bouzid@example.tn", fullName: "Yasmine Bouzid", phone: "+216 24 556 178", street: "9 rue des Jasmins", city: "Sfax", postalCode: "3000", governorate: "Sfax", isDefault: true },
+  { customerEmail: "karim.mansouri@example.tn", fullName: "Karim Mansouri", phone: "+216 95 774 332", street: "30 av. Habib Bourguiba", city: "Sousse", postalCode: "4000", governorate: "Sousse", isDefault: true },
+  { customerEmail: "nour.bensalah@example.tn", fullName: "Nour Ben Salah", phone: "+216 27 882 011", street: "5 rue de la Plage", city: "Nabeul", postalCode: "8000", governorate: "Nabeul", isDefault: true },
+];
