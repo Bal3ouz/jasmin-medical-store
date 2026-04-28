@@ -26,9 +26,7 @@ export const ProductInsertSchema = z
     metaDescription: z.string().max(500).optional().nullable(),
   })
   .refine(
-    (p) =>
-      (p.hasVariants && !p.sku && !p.priceTnd) ||
-      (!p.hasVariants && !!p.sku && !!p.priceTnd),
+    (p) => (p.hasVariants && !p.sku && !p.priceTnd) || (!p.hasVariants && !!p.sku && !!p.priceTnd),
     { message: "When hasVariants=false sku+priceTnd required; when true they must be omitted" },
   );
 

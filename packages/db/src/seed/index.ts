@@ -1,11 +1,11 @@
+import { eq } from "drizzle-orm";
 import { createClient } from "../client";
 import * as schema from "../schema";
-import { eq } from "drizzle-orm";
 import { BRAND_SEED } from "./data/brands";
 import { CATEGORY_SEED } from "./data/categories";
-import { PRODUCT_SEED } from "./data/products";
-import { CUSTOMER_SEED, ADDRESS_SEED } from "./data/customers";
+import { ADDRESS_SEED, CUSTOMER_SEED } from "./data/customers";
 import { ORDER_SEED } from "./data/orders";
+import { PRODUCT_SEED } from "./data/products";
 import { STAFF_SEED } from "./data/staff";
 
 const url = process.env.SUPABASE_DB_URL;
@@ -19,18 +19,28 @@ const db = createClient(url);
 async function seed() {
   console.log("→ brands");
   for (const b of BRAND_SEED) {
-    await db.insert(schema.brands).values(b).onConflictDoUpdate({ target: schema.brands.slug, set: b });
+    await db
+      .insert(schema.brands)
+      .values(b)
+      .onConflictDoUpdate({ target: schema.brands.slug, set: b });
   }
 
   console.log("→ categories");
   for (const c of CATEGORY_SEED) {
-    await db.insert(schema.categories).values(c).onConflictDoUpdate({ target: schema.categories.slug, set: c });
+    await db
+      .insert(schema.categories)
+      .values(c)
+      .onConflictDoUpdate({ target: schema.categories.slug, set: c });
   }
 
   console.log("→ products + variants + inventory");
   for (const p of PRODUCT_SEED) {
-    const brand = (await db.select().from(schema.brands).where(eq(schema.brands.slug, p.brandSlug)))[0];
-    const category = (await db.select().from(schema.categories).where(eq(schema.categories.slug, p.categorySlug)))[0];
+    const brand = (
+      await db.select().from(schema.brands).where(eq(schema.brands.slug, p.brandSlug))
+    )[0];
+    const category = (
+      await db.select().from(schema.categories).where(eq(schema.categories.slug, p.categorySlug))
+    )[0];
     if (!brand || !category) {
       console.warn(`  skip ${p.slug}: missing brand or category`);
       continue;
@@ -78,7 +88,10 @@ async function seed() {
     if (p.hasVariants && p.variants) {
       for (const v of p.variants) {
         const variant = (
-          await db.select().from(schema.productVariants).where(eq(schema.productVariants.sku, v.sku))
+          await db
+            .select()
+            .from(schema.productVariants)
+            .where(eq(schema.productVariants.sku, v.sku))
         )[0];
         if (variant) {
           await db
@@ -112,7 +125,10 @@ async function seed() {
 
   console.log("→ customers + addresses");
   for (const c of CUSTOMER_SEED) {
-    await db.insert(schema.customers).values(c).onConflictDoUpdate({ target: schema.customers.email, set: c });
+    await db
+      .insert(schema.customers)
+      .values(c)
+      .onConflictDoUpdate({ target: schema.customers.email, set: c });
   }
   for (const a of ADDRESS_SEED) {
     const cust = (
@@ -136,24 +152,41 @@ async function seed() {
 
   console.log("→ staff");
   for (const s of STAFF_SEED) {
-    await db.insert(schema.staffUsers).values(s).onConflictDoUpdate({ target: schema.staffUsers.email, set: s });
+    await db
+      .insert(schema.staffUsers)
+      .values(s)
+      .onConflictDoUpdate({ target: schema.staffUsers.email, set: s });
   }
 
   console.log("→ orders + items + events + sale stock movements");
   for (const o of ORDER_SEED) {
     const cust = o.customerEmail
-      ? (await db.select().from(schema.customers).where(eq(schema.customers.email, o.customerEmail)))[0]
+      ? (
+          await db
+            .select()
+            .from(schema.customers)
+            .where(eq(schema.customers.email, o.customerEmail))
+        )[0]
       : undefined;
 
     let subtotal = 0;
     const itemRows: (typeof schema.orderItems.$inferInsert)[] = [];
     for (const it of o.items) {
-      const product = (await db.select().from(schema.products).where(eq(schema.products.slug, it.productSlug)))[0];
+      const product = (
+        await db.select().from(schema.products).where(eq(schema.products.slug, it.productSlug))
+      )[0];
       if (!product) continue;
       const variant = it.variantSku
-        ? (await db.select().from(schema.productVariants).where(eq(schema.productVariants.sku, it.variantSku)))[0]
+        ? (
+            await db
+              .select()
+              .from(schema.productVariants)
+              .where(eq(schema.productVariants.sku, it.variantSku))
+          )[0]
         : undefined;
-      const brand = (await db.select().from(schema.brands).where(eq(schema.brands.id, product.brandId)))[0];
+      const brand = (
+        await db.select().from(schema.brands).where(eq(schema.brands.id, product.brandId))
+      )[0];
       const unitPrice = Number(variant?.priceTnd ?? product.priceTnd ?? 0);
       const lineTotal = unitPrice * it.quantity;
       subtotal += lineTotal;
@@ -193,13 +226,19 @@ async function seed() {
         shippingTnd: shippingFee.toFixed(3),
         totalTnd: total.toFixed(3),
         status: o.status,
-        paymentStatus: o.status === "delivered" ? "paid" : o.status === "cancelled" ? "failed" : "pending",
+        paymentStatus:
+          o.status === "delivered" ? "paid" : o.status === "cancelled" ? "failed" : "pending",
         paymentMethod: o.paymentMethod,
         createdAt,
         updatedAt: createdAt,
-        confirmedAt: ["confirmed", "preparing", "shipped", "delivered"].includes(o.status) ? createdAt : null,
-        shippedAt: ["shipped", "delivered"].includes(o.status) ? new Date(createdAt.getTime() + 86_400_000) : null,
-        deliveredAt: o.status === "delivered" ? new Date(createdAt.getTime() + 2 * 86_400_000) : null,
+        confirmedAt: ["confirmed", "preparing", "shipped", "delivered"].includes(o.status)
+          ? createdAt
+          : null,
+        shippedAt: ["shipped", "delivered"].includes(o.status)
+          ? new Date(createdAt.getTime() + 86_400_000)
+          : null,
+        deliveredAt:
+          o.status === "delivered" ? new Date(createdAt.getTime() + 2 * 86_400_000) : null,
         cancelledAt: o.status === "cancelled" ? new Date(createdAt.getTime() + 3600_000) : null,
       })
       .onConflictDoUpdate({
@@ -234,10 +273,17 @@ async function seed() {
 
     if (["confirmed", "preparing", "shipped", "delivered"].includes(o.status)) {
       for (const it of o.items) {
-        const product = (await db.select().from(schema.products).where(eq(schema.products.slug, it.productSlug)))[0];
+        const product = (
+          await db.select().from(schema.products).where(eq(schema.products.slug, it.productSlug))
+        )[0];
         if (!product) continue;
         const variant = it.variantSku
-          ? (await db.select().from(schema.productVariants).where(eq(schema.productVariants.sku, it.variantSku)))[0]
+          ? (
+              await db
+                .select()
+                .from(schema.productVariants)
+                .where(eq(schema.productVariants.sku, it.variantSku))
+            )[0]
           : undefined;
         await db.insert(schema.stockMovements).values({
           productId: variant ? null : product.id,

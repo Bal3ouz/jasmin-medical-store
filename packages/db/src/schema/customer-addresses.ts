@@ -1,11 +1,13 @@
-import { pgTable, uuid, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { customers } from "./customers";
 
 export const customerAddresses = pgTable(
   "customer_addresses",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    customerId: uuid("customer_id").notNull().references(() => customers.id, { onDelete: "cascade" }),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
     fullName: text("full_name").notNull(),
     phone: text("phone").notNull(),
     street: text("street").notNull(),

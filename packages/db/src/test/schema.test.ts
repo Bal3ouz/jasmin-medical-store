@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { sql } from "drizzle-orm";
-import { getSharedTestDatabase, type TestDb } from "./pglite-harness";
+import { type TestDb, getSharedTestDatabase } from "./pglite-harness";
 
 /**
  * All schema-shape smoke tests live in this single file.
@@ -81,7 +81,6 @@ describe("inventory schema", () => {
   });
 
   test("inventory_public view derives stock_status correctly", async () => {
-
     // Use unique IDs so we don't collide with future schema-area tests
     // that may seed catalog rows in this same shared DB.
     await db.execute(

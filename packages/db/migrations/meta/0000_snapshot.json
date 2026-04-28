@@ -21,43 +21,22 @@
     "public.payment_method": {
       "name": "payment_method",
       "schema": "public",
-      "values": [
-        "cash_on_delivery",
-        "card_konnect",
-        "card_clic_to_pay",
-        "bank_transfer"
-      ]
+      "values": ["cash_on_delivery", "card_konnect", "card_clic_to_pay", "bank_transfer"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "paid",
-        "refunded",
-        "failed"
-      ]
+      "values": ["pending", "paid", "refunded", "failed"]
     },
     "public.staff_role": {
       "name": "staff_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "manager",
-        "cashier",
-        "stock"
-      ]
+      "values": ["admin", "manager", "cashier", "stock"]
     },
     "public.stock_movement_type": {
       "name": "stock_movement_type",
       "schema": "public",
-      "values": [
-        "purchase",
-        "sale",
-        "adjustment",
-        "return",
-        "transfer"
-      ]
+      "values": ["purchase", "sale", "adjustment", "return", "transfer"]
     }
   },
   "schemas": {},

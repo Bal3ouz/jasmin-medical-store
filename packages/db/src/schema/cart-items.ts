@@ -1,14 +1,18 @@
-import { pgTable, uuid, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { carts } from "./carts";
-import { products } from "./products";
 import { productVariants } from "./product-variants";
+import { products } from "./products";
 
 export const cartItems = pgTable(
   "cart_items",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    cartId: uuid("cart_id").notNull().references(() => carts.id, { onDelete: "cascade" }),
-    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    cartId: uuid("cart_id")
+      .notNull()
+      .references(() => carts.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     variantId: uuid("variant_id").references(() => productVariants.id, { onDelete: "cascade" }),
     quantity: integer("quantity").notNull(),
     addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),

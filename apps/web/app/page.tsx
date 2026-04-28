@@ -1,3 +1,4 @@
+import { VOICE } from "@jasmin/lib";
 import {
   AiryContainer,
   BodyText,
@@ -12,7 +13,6 @@ import {
   PriceTag,
   TealHeroPanel,
 } from "@jasmin/ui";
-import { VOICE } from "@jasmin/lib";
 
 export default function HomePage() {
   return (
@@ -49,7 +49,10 @@ export default function HomePage() {
         <LabelEyebrow>{VOICE.trustedBrandsLabel}</LabelEyebrow>
         <Marquee className="mt-6">
           {["SVR", "Avène", "La Roche-Posay", "Vichy", "Bioderma", "Nuxe"].map((b) => (
-            <span key={b} className="font-[var(--font-display)] italic text-2xl text-warm-taupe-soft">
+            <span
+              key={b}
+              className="font-[var(--font-display)] italic text-2xl text-warm-taupe-soft"
+            >
               {b}
             </span>
           ))}
@@ -59,7 +62,8 @@ export default function HomePage() {
       <AiryContainer className="bg-linen px-8 py-16 lg:px-24">
         <H2Section>Aperçu du système de design</H2Section>
         <BodyText className="mt-4 max-w-2xl">
-          Cette page est un témoin technique : elle prouve que les jetons, polices et composants se chargent correctement.
+          Cette page est un témoin technique : elle prouve que les jetons, polices et composants se
+          chargent correctement.
         </BodyText>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Pill tone="teal">En stock</Pill>

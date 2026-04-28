@@ -44,10 +44,7 @@ export function H3Card({ className, ...rest }: HTMLAttributes<HTMLHeadingElement
 export function BodyText({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn(
-        "font-[var(--font-body)] text-base leading-[1.6] text-warm-taupe",
-        className,
-      )}
+      className={cn("font-[var(--font-body)] text-base leading-[1.6] text-warm-taupe", className)}
       {...rest}
     />
   );

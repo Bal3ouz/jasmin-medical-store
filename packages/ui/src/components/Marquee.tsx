@@ -16,9 +16,15 @@ export function Marquee({ children, className, duration = 32 }: MarqueeProps) {
         style={{ ["--mq-d" as never]: `${duration}s` }}
       >
         <div className="flex shrink-0 items-center gap-16">{children}</div>
-        <div className="flex shrink-0 items-center gap-16" aria-hidden>{children}</div>
+        <div className="flex shrink-0 items-center gap-16" aria-hidden>
+          {children}
+        </div>
       </div>
-      <style>{`@keyframes jasmin-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+      <style>
+        {
+          "@keyframes jasmin-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }"
+        }
+      </style>
     </div>
   );
 }

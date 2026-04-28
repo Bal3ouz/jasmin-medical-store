@@ -1,12 +1,14 @@
-import { pgTable, uuid, text, integer, boolean, index } from "drizzle-orm/pg-core";
-import { products } from "./products";
+import { boolean, index, integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { productVariants } from "./product-variants";
+import { products } from "./products";
 
 export const productImages = pgTable(
   "product_images",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     variantId: uuid("variant_id").references(() => productVariants.id, { onDelete: "cascade" }),
     storagePath: text("storage_path").notNull(),
     altText: text("alt_text"),

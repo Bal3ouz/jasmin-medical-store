@@ -1,15 +1,15 @@
+import { sql } from "drizzle-orm";
 import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
+  boolean,
+  check,
+  index,
   integer,
   numeric,
-  boolean,
-  index,
-  check,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { brands } from "./brands";
 import { categories } from "./categories";
 
@@ -19,8 +19,12 @@ export const products = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     slug: text("slug").notNull().unique(),
     name: text("name").notNull(),
-    brandId: uuid("brand_id").notNull().references(() => brands.id, { onDelete: "restrict" }),
-    categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "restrict" }),
+    brandId: uuid("brand_id")
+      .notNull()
+      .references(() => brands.id, { onDelete: "restrict" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "restrict" }),
     shortDescription: text("short_description").notNull(),
     description: text("description").notNull(),
     ingredients: text("ingredients"),

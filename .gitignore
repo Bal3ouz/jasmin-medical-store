@@ -11,3 +11,6 @@ dist
 !.vscode/extensions.json
 coverage
 .bun
+
+# TypeScript build info
+*.tsbuildinfo

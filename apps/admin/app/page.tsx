@@ -34,10 +34,12 @@ export default async function DashboardPage() {
 
         <div className="mt-16 max-w-3xl">
           <LabelEyebrow>Tableau de bord</LabelEyebrow>
-          <H1Editorial className="mt-4 text-deep-teal text-5xl">Bienvenue, {session.fullName.split(" ")[0]}.</H1Editorial>
+          <H1Editorial className="mt-4 text-deep-teal text-5xl">
+            Bienvenue, {session.fullName.split(" ")[0]}.
+          </H1Editorial>
           <BodyText className="mt-4">
-            L'espace équipe Jasmin Médical Store est en cours d'aménagement.
-            Les modules Catalogue, Commandes, Stock et Décisionnel arrivent dans les prochaines phases.
+            L'espace équipe Jasmin Médical Store est en cours d'aménagement. Les modules Catalogue,
+            Commandes, Stock et Décisionnel arrivent dans les prochaines phases.
           </BodyText>
         </div>
 

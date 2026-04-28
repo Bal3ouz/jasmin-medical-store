@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 import type { HTMLAttributes } from "react";
 import { cn } from "../cn";
 
@@ -17,7 +17,9 @@ const pillStyles = cva(
   },
 );
 
-export interface PillProps extends HTMLAttributes<HTMLSpanElement>, VariantProps<typeof pillStyles> {}
+export interface PillProps
+  extends HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof pillStyles> {}
 
 export function Pill({ tone, className, ...rest }: PillProps) {
   return <span className={cn(pillStyles({ tone }), className)} {...rest} />;

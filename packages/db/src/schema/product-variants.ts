@@ -1,12 +1,12 @@
 import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  integer,
-  numeric,
   boolean,
   index,
+  integer,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { products } from "./products";
 
@@ -14,7 +14,9 @@ export const productVariants = pgTable(
   "product_variants",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     sku: text("sku").notNull().unique(),
     name: text("name").notNull(),
     priceTnd: numeric("price_tnd", { precision: 10, scale: 3 }).notNull(),

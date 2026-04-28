@@ -1,7 +1,7 @@
-import { pgTable, uuid, integer, text, timestamp, index } from "drizzle-orm/pg-core";
-import { products } from "./products";
-import { productVariants } from "./product-variants";
+import { index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { stockMovementType } from "./_enums";
+import { productVariants } from "./product-variants";
+import { products } from "./products";
 
 export const stockMovements = pgTable(
   "stock_movements",

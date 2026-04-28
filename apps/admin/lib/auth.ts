@@ -1,7 +1,7 @@
-import { createSupabaseServerClient } from "./supabase/server";
 import { createClient } from "@jasmin/db";
 import { staffUsers } from "@jasmin/db/schema";
 import { eq } from "drizzle-orm";
+import { createSupabaseServerClient } from "./supabase/server";
 
 export interface StaffSession {
   authUserId: string;

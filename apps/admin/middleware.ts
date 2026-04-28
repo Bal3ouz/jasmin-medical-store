@@ -1,6 +1,6 @@
+import { createServerClient } from "@supabase/ssr";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/_next")) {

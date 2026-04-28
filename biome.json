@@ -3,13 +3,25 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": { "ignore": ["**/.next", "**/dist", "**/node_modules", "**/migrations/*.sql"] },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
-  "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" } },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" }
+  },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
-      "style": { "useImportType": "warn", "useNodejsImportProtocol": "warn" },
-      "suspicious": { "noConsoleLog": "warn" }
+      "style": {
+        "useImportType": "warn",
+        "useNodejsImportProtocol": "warn",
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": { "noConsoleLog": "off" }
     }
-  }
+  },
+  "overrides": [
+    {
+      "include": ["**/lib/supabase/**", "**/middleware.ts"],
+      "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
+    }
+  ]
 }

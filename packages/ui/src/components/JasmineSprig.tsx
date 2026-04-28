@@ -10,7 +10,12 @@ export function JasmineSprig({ className, ...rest }: SVGProps<SVGSVGElement>) {
       aria-hidden="true"
       {...rest}
     >
-      <path d="M8 56 C 18 36, 28 28, 40 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M8 56 C 18 36, 28 28, 40 22"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <g fill="currentColor">
         <circle cx="40" cy="22" r="3.6" />
         <circle cx="46" cy="16" r="2.6" />
