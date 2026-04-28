@@ -10,3 +10,6 @@ export * from "./stock-movements";
 export * from "./customers";
 export * from "./customer-addresses";
 export * from "./newsletter-subscribers";
+export * from "./orders";
+export * from "./order-items";
+export * from "./order-events";

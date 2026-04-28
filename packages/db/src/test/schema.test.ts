@@ -128,3 +128,14 @@ describe("customer schema", () => {
     expect(tables).toEqual(["customer_addresses", "customers", "newsletter_subscribers"]);
   });
 });
+
+describe("orders schema", () => {
+  test("creates orders, order_items, order_events", async () => {
+    const tables = (
+      await db.execute(
+        sql`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('orders','order_items','order_events') ORDER BY tablename`,
+      )
+    ).rows.map((r) => (r as { tablename: string }).tablename);
+    expect(tables).toEqual(["order_events", "order_items", "orders"]);
+  });
+});
