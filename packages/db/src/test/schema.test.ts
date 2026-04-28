@@ -81,6 +81,7 @@ describe("inventory schema", () => {
   });
 
   test("inventory_public view derives stock_status correctly", async () => {
+
     // Use unique IDs so we don't collide with future schema-area tests
     // that may seed catalog rows in this same shared DB.
     await db.execute(
@@ -114,5 +115,16 @@ describe("inventory schema", () => {
       ORDER BY stock_status`);
     const statuses = result.rows.map((r) => (r as { stock_status: string }).stock_status);
     expect(statuses).toEqual(["in_stock", "low", "out"]);
+  });
+});
+
+describe("customer schema", () => {
+  test("creates customers, customer_addresses, newsletter_subscribers", async () => {
+    const tables = (
+      await db.execute(
+        sql`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('customers','customer_addresses','newsletter_subscribers') ORDER BY tablename`,
+      )
+    ).rows.map((r) => (r as { tablename: string }).tablename);
+    expect(tables).toEqual(["customer_addresses", "customers", "newsletter_subscribers"]);
   });
 });

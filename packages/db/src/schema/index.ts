@@ -7,3 +7,6 @@ export * from "./product-categories";
 export * from "./product-images";
 export * from "./inventory";
 export * from "./stock-movements";
+export * from "./customers";
+export * from "./customer-addresses";
+export * from "./newsletter-subscribers";
