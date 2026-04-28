@@ -25,4 +25,12 @@ describe("slugify", () => {
   test("handles empty string", () => {
     expect(slugify("")).toBe("");
   });
+
+  test("expands œ ligature to 'oe' (e.g., 'cœur' -> 'coeur')", () => {
+    expect(slugify("Soin cœur & peau")).toBe("soin-coeur-peau");
+  });
+
+  test("expands Œ ligature to 'oe' after lowercasing", () => {
+    expect(slugify("ŒUVRE PARFUMÉE")).toBe("oeuvre-parfumee");
+  });
 });

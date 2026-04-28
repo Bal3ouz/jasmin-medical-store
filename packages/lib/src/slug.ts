@@ -1,5 +1,7 @@
 export function slugify(input: string): string {
   return input
+    .replace(/œ/g, "oe")
+    .replace(/Œ/g, "OE")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

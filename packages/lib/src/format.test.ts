@@ -18,6 +18,14 @@ describe("formatTND", () => {
     // Bun 1.3.11 / ICU: Intl.NumberFormat("fr-TN") uses U+202F (narrow no-break space) as group separator
     expect(formatTND(1234.5)).toBe("1 234,500 TND");
   });
+
+  test("rejects NaN", () => {
+    expect(() => formatTND(Number.NaN)).toThrow(RangeError);
+  });
+
+  test("rejects Infinity", () => {
+    expect(() => formatTND(Number.POSITIVE_INFINITY)).toThrow(RangeError);
+  });
 });
 
 describe("formatTNDFromMillimes", () => {
