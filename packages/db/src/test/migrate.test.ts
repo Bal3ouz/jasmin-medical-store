@@ -1,13 +1,21 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { sql } from "drizzle-orm";
+import type { PGlite } from "@electric-sql/pglite";
 import { createTestDatabase, migrateTestDatabase } from "./pglite-harness";
 
 describe("schema migrations", () => {
-  test("apply cleanly on a fresh pglite database and create the enum types", async () => {
-    const { db } = await createTestDatabase();
-    await migrateTestDatabase(db);
+  let client: PGlite | null = null;
 
-    const result = await db.execute(
+  afterAll(async () => {
+    await client?.close();
+  });
+
+  test("apply cleanly on a fresh pglite database and create the enum types", async () => {
+    const created = await createTestDatabase();
+    client = created.client;
+    await migrateTestDatabase(created.db);
+
+    const result = await created.db.execute(
       sql`SELECT typname FROM pg_type WHERE typname IN ('staff_role','order_status','payment_status','payment_method','stock_movement_type') ORDER BY typname`,
     );
     const enumNames = result.rows.map((r) => (r as { typname: string }).typname);

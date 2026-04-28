@@ -1,5 +1,5 @@
 {
   "extends": "@jasmin/config/tsconfig.lib.json",
-  "compilerOptions": { "rootDir": ".", "outDir": "dist" },
-  "include": ["src", "drizzle.config.ts"]
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
+  "include": ["src"]
 }

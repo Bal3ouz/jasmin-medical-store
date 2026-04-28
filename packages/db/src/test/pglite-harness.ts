@@ -9,7 +9,9 @@ export async function createTestDatabase() {
   const client = new PGlite();
   const db = drizzle(client, { schema });
 
-  // pglite has no `auth` schema; stub `auth.uid()` so future RLS DDL parses.
+  // pglite has no `auth` schema. Stub `auth.uid()` so RLS DDL parses.
+  // It returns NULL — tests asserting a specific caller identity must override
+  // this function or set auth.uid() explicitly before each statement.
   await db.execute(sql`CREATE SCHEMA IF NOT EXISTS auth`);
   await db.execute(
     sql`CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$`,
