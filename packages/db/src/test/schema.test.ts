@@ -139,3 +139,24 @@ describe("orders schema", () => {
     expect(tables).toEqual(["order_events", "order_items", "orders"]);
   });
 });
+
+describe("staff + cart schema", () => {
+  test("creates staff_users, audit_log, carts, cart_items", async () => {
+    const tables = (
+      await db.execute(
+        sql`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('staff_users','audit_log','carts','cart_items') ORDER BY tablename`,
+      )
+    ).rows.map((r) => (r as { tablename: string }).tablename);
+    expect(tables).toEqual(["audit_log", "cart_items", "carts", "staff_users"]);
+  });
+
+  test("staff_users has role enum with the four roles", async () => {
+    const result = await db.execute(sql`
+      SELECT enumlabel FROM pg_enum
+      JOIN pg_type ON pg_type.oid = pg_enum.enumtypid
+      WHERE pg_type.typname = 'staff_role'
+      ORDER BY enumsortorder`);
+    const labels = result.rows.map((r) => (r as { enumlabel: string }).enumlabel);
+    expect(labels).toEqual(["admin", "manager", "cashier", "stock"]);
+  });
+});
