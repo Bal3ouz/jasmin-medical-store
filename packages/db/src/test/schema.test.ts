@@ -313,3 +313,120 @@ describe("admin: audit log helper", () => {
     expect(n).toBe(0);
   });
 });
+
+describe("admin: order transitions", () => {
+  // Same trick as the audit-log block above: the import path is built at
+  // runtime so TypeScript's project graph never tries to follow it into
+  // apps/admin (which lives outside packages/db's rootDir). Bun resolves
+  // the spec normally at execution time.
+  const ADMIN_ORDERS_PATH = `${"..".repeat(1)}/../../../apps/admin/app/actions/orders`;
+
+  type TransitionOrderCoreFn = (
+    database: unknown,
+    p: {
+      orderId: string;
+      toStatus:
+        | "pending"
+        | "confirmed"
+        | "preparing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+        | "refunded";
+      role: "admin" | "manager" | "cashier" | "stock";
+      staffUserId: string;
+      note?: string | null;
+    },
+  ) => Promise<unknown>;
+
+  async function loadTransition(): Promise<TransitionOrderCoreFn> {
+    const mod = (await import(ADMIN_ORDERS_PATH)) as {
+      transitionOrderCore: TransitionOrderCoreFn;
+    };
+    return mod.transitionOrderCore;
+  }
+
+  test("transitionOrder updates status, sets timestamp, writes order_event", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`mgr-${staffId}@jasmin.tn`}, 'Manager Test', 'manager', true)
+    `);
+    const orderId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate)
+      VALUES (${orderId}, ${`JMS-2026-T-${staffId.slice(0, 6)}-1`}, 'pending', 'pending',
+              'cash_on_delivery',
+              100.0, 7.0, 107.0,
+              'Test Buyer','+216 11 11 11 11','Rue X','Nabeul','8000','Nabeul')
+    `);
+
+    const transitionOrderCore = await loadTransition();
+    await transitionOrderCore(db, {
+      orderId,
+      toStatus: "confirmed",
+      role: "manager",
+      staffUserId: staffId,
+      note: "via test",
+    });
+
+    const orderRows = await db.execute(sql`
+      SELECT status, confirmed_at FROM orders WHERE id = ${orderId}
+    `);
+    const order = pickRow(orderRows.rows) as {
+      status: string;
+      confirmed_at: string | null;
+    };
+    expect(order.status).toBe("confirmed");
+    expect(order.confirmed_at).not.toBeNull();
+
+    const eventRows = await db.execute(sql`
+      SELECT event_type, from_status, to_status, notes, performed_by
+      FROM order_events WHERE order_id = ${orderId}
+    `);
+    const ev = pickRow(eventRows.rows) as {
+      event_type: string;
+      from_status: string;
+      to_status: string;
+      notes: string | null;
+      performed_by: string;
+    };
+    expect(ev.event_type).toBe("confirmed");
+    expect(ev.from_status).toBe("pending");
+    expect(ev.to_status).toBe("confirmed");
+    expect(ev.notes).toBe("via test");
+    expect(ev.performed_by).toBe(staffId);
+  });
+
+  test("transitionOrder rejects disallowed transition (cashier cancel)", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`cash-${staffId}@jasmin.tn`}, 'Cash Test', 'cashier', true)
+    `);
+    const orderId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate)
+      VALUES (${orderId}, ${`JMS-2026-T-${staffId.slice(0, 6)}-2`}, 'confirmed', 'pending',
+              'cash_on_delivery',
+              100.0, 7.0, 107.0,
+              'Test Buyer','+216 11 11 11 11','Rue X','Nabeul','8000','Nabeul')
+    `);
+
+    const transitionOrderCore = await loadTransition();
+    await expect(
+      transitionOrderCore(db, {
+        orderId,
+        toStatus: "cancelled",
+        role: "cashier",
+        staffUserId: staffId,
+      }),
+    ).rejects.toThrow(/Forbidden|not allowed|interdit/i);
+  });
+});
