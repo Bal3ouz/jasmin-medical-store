@@ -16,6 +16,7 @@ export type AdminCustomerSort = "createdAt" | "-createdAt" | "fullName" | "-full
 
 export interface ListCustomersForAdminParams {
   search?: string;
+  cohort?: string; // 'YYYY-MM' — filter by first-order month
   page: number;
   limit: number;
   sort?: AdminCustomerSort;
@@ -49,6 +50,17 @@ export async function listCustomersForAdmin(
       ilike(customers.phone, like),
     );
     if (term) conditions.push(term);
+  }
+
+  if (p.cohort) {
+    // YYYY-MM format. Filter customers whose first-order month equals the cohort.
+    conditions.push(sql`
+      date_trunc('month',
+        (SELECT MIN(o2.created_at) FROM orders o2
+         WHERE o2.customer_id = ${customers.id}
+           AND o2.status NOT IN ('cancelled','refunded'))
+      ) = ${`${p.cohort}-01`}::date
+    `);
   }
 
   const where = conditions.length ? and(...conditions) : undefined;

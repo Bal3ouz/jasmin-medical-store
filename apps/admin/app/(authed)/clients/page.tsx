@@ -36,6 +36,7 @@ export default async function CustomersPage(props: {
 
   const { rows, total } = await listCustomersForAdmin(db, {
     search: sp.q,
+    cohort: sp.cohort,
     page,
     limit: PAGE_SIZE,
     sort,
