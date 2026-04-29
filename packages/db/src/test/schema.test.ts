@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { sql } from "drizzle-orm";
+import { getProductBySlug, listCategories, listPublishedProducts } from "../queries/catalog";
 import { type TestDb, getSharedTestDatabase } from "./pglite-harness";
 
 /**
@@ -157,5 +158,52 @@ describe("staff + cart schema", () => {
       ORDER BY enumsortorder`);
     const labels = result.rows.map((r) => (r as { enumlabel: string }).enumlabel);
     expect(labels).toEqual(["admin", "manager", "cashier", "stock"]);
+  });
+});
+
+describe("query helpers", () => {
+  test("listCategories returns root + subcategories", async () => {
+    await db.execute(sql`
+      INSERT INTO categories (id, slug, name, parent_id, display_order)
+      VALUES
+        ('cc000000-0000-4000-8000-000000000001','q-cosmetique','Q Cosmétique', NULL, 1),
+        ('cc000000-0000-4000-8000-000000000002','q-visage','Q Visage', 'cc000000-0000-4000-8000-000000000001', 1)
+      ON CONFLICT DO NOTHING`);
+    const cats = await listCategories(db as never);
+    expect(cats.find((c) => c.slug === "q-cosmetique")).toBeDefined();
+    expect(cats.find((c) => c.slug === "q-visage")).toBeDefined();
+  });
+
+  test("listPublishedProducts filters by categorySlug and excludes unpublished", async () => {
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES ('bb000000-0000-4000-8000-000000000001','qb','QB') ON CONFLICT DO NOTHING`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES ('cc000000-0000-4000-8000-000000000003','q-cat','QCat') ON CONFLICT DO NOTHING`,
+    );
+    await db.execute(sql`INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        ('dd000000-0000-4000-8000-000000000010','q-published-1','Q Published 1','bb000000-0000-4000-8000-000000000001','cc000000-0000-4000-8000-000000000003','x','x',false,'Q-PUB-1', 10.000, true),
+        ('dd000000-0000-4000-8000-000000000011','q-draft-1','Q Draft 1','bb000000-0000-4000-8000-000000000001','cc000000-0000-4000-8000-000000000003','x','x',false,'Q-DRF-1', 10.000, false)
+      ON CONFLICT DO NOTHING`);
+    await db.execute(sql`INSERT INTO inventory (product_id, on_hand, reorder_point) VALUES
+      ('dd000000-0000-4000-8000-000000000010', 10, 3),
+      ('dd000000-0000-4000-8000-000000000011', 10, 3)
+      ON CONFLICT DO NOTHING`);
+
+    const list = await listPublishedProducts(db as never, { categorySlug: "q-cat" });
+    const slugs = list.map((p) => p.product.slug);
+    expect(slugs).toContain("q-published-1");
+    expect(slugs).not.toContain("q-draft-1");
+  });
+
+  test("getProductBySlug returns full detail or null", async () => {
+    const detail = await getProductBySlug(db as never, "q-published-1");
+    expect(detail).not.toBeNull();
+    expect(detail?.brand.slug).toBe("qb");
+    expect(detail?.stockStatus).toBe("in_stock");
+
+    const missing = await getProductBySlug(db as never, "does-not-exist");
+    expect(missing).toBeNull();
   });
 });
