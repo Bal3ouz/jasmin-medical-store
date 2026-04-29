@@ -41,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { href: "/equipe", label: "Équipe", visibleTo: ["admin"] },
   { href: "/audit", label: "Audit", visibleTo: ["admin"] },
+  { href: "/decisionnel", label: "Décisionnel", visibleTo: ["admin", "manager"] },
   {
     href: "/compte",
     label: "Mon compte",
