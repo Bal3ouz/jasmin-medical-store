@@ -14,3 +14,8 @@ coverage
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Demo artifacts
+apps/*/test-results/
+packages/db/src/seed/images/
+supabase/.temp/

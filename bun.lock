@@ -73,6 +73,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@jasmin/lib": "workspace:*",
+        "@supabase/supabase-js": "2.46.2",
         "drizzle-orm": "0.36.4",
         "postgres": "3.4.5",
       },
