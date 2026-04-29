@@ -242,3 +242,60 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION on_auth_user_created();
+
+-- ============================================================
+-- Phase 3 additions: staff-invite trigger skip + storage policies
+-- ============================================================
+
+-- Replace the on_auth_user_created body so that staff invites
+-- (raw_user_meta_data.is_staff = 'true') do NOT create a customers row.
+CREATE OR REPLACE FUNCTION on_auth_user_created()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF (NEW.raw_user_meta_data ->> 'is_staff') = 'true' THEN
+    RETURN NEW;
+  END IF;
+
+  INSERT INTO customers (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NULLIF(NEW.raw_user_meta_data ->> 'full_name', '')
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email      = EXCLUDED.email,
+    full_name  = COALESCE(EXCLUDED.full_name, customers.full_name),
+    updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- Storage bucket for product images.
+INSERT INTO storage.buckets (id, name, public)
+  VALUES ('product-images', 'product-images', true)
+  ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS product_images_public_read ON storage.objects;
+CREATE POLICY product_images_public_read ON storage.objects
+  FOR SELECT USING (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS product_images_staff_write ON storage.objects;
+CREATE POLICY product_images_staff_write ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'product-images'
+    AND is_staff(ARRAY['admin','manager','stock']::staff_role[])
+  );
+
+DROP POLICY IF EXISTS product_images_staff_update ON storage.objects;
+CREATE POLICY product_images_staff_update ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'product-images'
+    AND is_staff(ARRAY['admin','manager','stock']::staff_role[])
+  );
+
+DROP POLICY IF EXISTS product_images_staff_delete ON storage.objects;
+CREATE POLICY product_images_staff_delete ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'product-images'
+    AND is_staff(ARRAY['admin','manager','stock']::staff_role[])
+  );
