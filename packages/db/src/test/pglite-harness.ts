@@ -42,6 +42,57 @@ export async function getSharedTestDatabase(): Promise<{ db: TestDb; client: PGl
   if (!_migrated) {
     const migrationsFolder = path.resolve(import.meta.dir, "../../migrations");
     await migrate(_shared.db, { migrationsFolder });
+
+    // Phase-2/3 SQL-side bits the harness needs to mirror so feature tests
+    // (walk-in order numbers, staff-invite trigger skip) can exercise them
+    // against PGlite the same way Supabase runs them in production. The
+    // `sql/rls.sql` file itself isn't loaded — only the structural pieces
+    // tests actually depend on.
+
+    // Sequence used by checkout / walk-in to assign order numbers.
+    await _shared.db.execute(sql`CREATE SEQUENCE IF NOT EXISTS jms_order_seq START 1`);
+
+    // Stub `auth.users` so the on_auth_user_created trigger can bind.
+    await _shared.db.execute(sql`
+      CREATE TABLE IF NOT EXISTS auth.users (
+        id uuid PRIMARY KEY,
+        email text,
+        raw_user_meta_data jsonb
+      )
+    `);
+
+    // Apply the latest on_auth_user_created body — must match the Phase-3
+    // version in packages/db/sql/rls.sql (skip customers row when
+    // is_staff='true'). SECURITY DEFINER is omitted: PGlite has no role
+    // boundary, and production rls.sql still applies it on Supabase.
+    await _shared.db.execute(sql`
+      CREATE OR REPLACE FUNCTION on_auth_user_created()
+      RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN
+        IF (NEW.raw_user_meta_data ->> 'is_staff') = 'true' THEN
+          RETURN NEW;
+        END IF;
+        INSERT INTO customers (id, email, full_name)
+        VALUES (
+          NEW.id,
+          NEW.email,
+          NULLIF(NEW.raw_user_meta_data ->> 'full_name', '')
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          email = EXCLUDED.email,
+          full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
+          updated_at = now();
+        RETURN NEW;
+      END;
+      $$
+    `);
+    await _shared.db.execute(sql`DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users`);
+    await _shared.db.execute(sql`
+      CREATE TRIGGER on_auth_user_created
+        AFTER INSERT ON auth.users
+        FOR EACH ROW EXECUTE FUNCTION on_auth_user_created()
+    `);
+
     _migrated = true;
   }
 
