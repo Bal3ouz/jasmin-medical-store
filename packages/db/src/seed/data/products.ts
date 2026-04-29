@@ -21,6 +21,9 @@ export interface SeedProduct {
   variants?: SeedVariant[];
   reorderPoint: number;
   initialStock: number;
+  /** Manufacturer/retailer image URL — used by `bun run db:upload-images` to scrape + push to Supabase Storage. */
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 const cosVisage = "visage";
