@@ -833,3 +833,90 @@ describe("bi: sales kpis + trend", () => {
     expect(typeof row.orders).toBe("number");
   });
 });
+
+describe("bi: best sellers", () => {
+  // Seeds two products in two confirmed orders with different qtys, plus
+  // a third "ghost" product on a cancelled order. We then assert:
+  //   - both confirmed-only products show up,
+  //   - the ghost (only ever ordered on a cancelled row) does NOT show up,
+  //   - rows are sorted by `qty` desc.
+  test("ranks by qty desc and excludes cancelled orders", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productHigh = crypto.randomUUID(); // will accumulate qty=5
+    const productLow = crypto.randomUUID(); // will accumulate qty=2
+    const productGhost = crypto.randomUUID(); // appears only on cancelled
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`bs-b-${brandId.slice(0, 6)}`}, 'BSBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`bs-c-${categoryId.slice(0, 6)}`}, 'BSCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        (${productHigh},  ${`bs-hi-${productHigh.slice(0, 6)}`},  'BSHigh',  ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BS-HI-${productHigh.slice(0, 6)}`},  10.000, true),
+        (${productLow},   ${`bs-lo-${productLow.slice(0, 6)}`},   'BSLow',   ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BS-LO-${productLow.slice(0, 6)}`},   20.000, true),
+        (${productGhost}, ${`bs-gh-${productGhost.slice(0, 6)}`}, 'BSGhost', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BS-GH-${productGhost.slice(0, 6)}`}, 30.000, true)
+    `);
+
+    const orderHi = crypto.randomUUID();
+    const orderLo = crypto.randomUUID();
+    const orderCancel = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          confirmed_at)
+      VALUES
+        (${orderHi},     ${`JMS-BI-BS-HI-${orderHi.slice(0, 6)}`},     'confirmed', 'paid',
+         'cash_on_delivery', 50.000, 7.000, 57.000,
+         'BS Hi','+216 90 11 11 11','Rue Hi','Tunis','1000','Tunis', now()),
+        (${orderLo},     ${`JMS-BI-BS-LO-${orderLo.slice(0, 6)}`},     'confirmed', 'paid',
+         'cash_on_delivery', 40.000, 7.000, 47.000,
+         'BS Lo','+216 90 22 22 22','Rue Lo','Tunis','1000','Tunis', now()),
+        (${orderCancel}, ${`JMS-BI-BS-CX-${orderCancel.slice(0, 6)}`}, 'cancelled', 'pending',
+         'cash_on_delivery', 999.000, 7.000, 1006.000,
+         'BS Cx','+216 90 33 33 33','Rue Cx','Tunis','1000','Tunis', NULL)
+    `);
+    // Confirmed: 5 of High + 1 of Low in orderHi.
+    // Confirmed: 1 of Low in orderLo.
+    // Cancelled: 99 of Ghost in orderCancel — must be ignored.
+    await db.execute(sql`
+      INSERT INTO order_items (id, order_id, product_id, product_name_snapshot, brand_snapshot, sku_snapshot, unit_price_tnd, quantity, line_total_tnd)
+      VALUES
+        (${crypto.randomUUID()}, ${orderHi},     ${productHigh},  'BSHigh',  'BSBrand', ${`SKU-BS-HI-${productHigh.slice(0, 6)}`},  10.000, 5,  50.000),
+        (${crypto.randomUUID()}, ${orderHi},     ${productLow},   'BSLow',   'BSBrand', ${`SKU-BS-LO-${productLow.slice(0, 6)}`},   20.000, 1,  20.000),
+        (${crypto.randomUUID()}, ${orderLo},     ${productLow},   'BSLow',   'BSBrand', ${`SKU-BS-LO-${productLow.slice(0, 6)}`},   20.000, 1,  20.000),
+        (${crypto.randomUUID()}, ${orderCancel}, ${productGhost}, 'BSGhost', 'BSBrand', ${`SKU-BS-GH-${productGhost.slice(0, 6)}`}, 30.000, 99, 2970.000)
+    `);
+
+    const { getBestSellers } = await import("../queries");
+    const rows = await getBestSellers(db as never, {
+      since: null,
+      sortBy: "qty",
+      limit: 50,
+    });
+
+    const hi = rows.find((r) => r.productId === productHigh);
+    const lo = rows.find((r) => r.productId === productLow);
+    const ghost = rows.find((r) => r.productId === productGhost);
+
+    expect(hi).toBeDefined();
+    expect(lo).toBeDefined();
+    expect(ghost).toBeUndefined(); // cancelled order MUST be excluded
+
+    expect(hi!.qty).toBe(5);
+    expect(lo!.qty).toBe(2);
+    expect(hi!.brandName).toBe("BSBrand");
+    expect(hi!.categoryName).toBe("BSCat");
+
+    // Global ordering: every row's qty must be >= the next row's qty.
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i]!.qty).toBeLessThanOrEqual(rows[i - 1]!.qty);
+    }
+  });
+});
