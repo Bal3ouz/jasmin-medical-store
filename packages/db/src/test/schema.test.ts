@@ -1018,3 +1018,52 @@ describe("bi: basket pairs", () => {
     expect(pairs[0]!.count).toBeGreaterThanOrEqual(pairs.at(-1)!.count);
   });
 });
+
+describe("bi: stock health", () => {
+  // Seeds a single product with inventory rows where on_hand=2 and
+  // reorder_point=5, so deficit=3. getReorderCandidates must surface a
+  // row with deficit >= 1.
+  test("getReorderCandidates returns rows with deficit > 0", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productId = crypto.randomUUID();
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`sh-b-${brandId.slice(0, 6)}`}, 'SHBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`sh-c-${categoryId.slice(0, 6)}`}, 'SHCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        (${productId}, ${`sh-p-${productId.slice(0, 6)}`}, 'SHReorderProduct', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-SH-${productId.slice(0, 6)}`}, 10.000, true)
+    `);
+    await db.execute(sql`
+      INSERT INTO inventory (id, product_id, variant_id, on_hand, reserved, reorder_point)
+      VALUES (${crypto.randomUUID()}, ${productId}, NULL, 2, 0, 5)
+    `);
+
+    const { getReorderCandidates } = await import("../queries");
+    const rows = await getReorderCandidates(db as never, { limit: 50 });
+
+    const hit = rows.find((r) => r.productId === productId);
+    expect(hit).toBeDefined();
+    expect(hit!.onHand).toBe(2);
+    expect(hit!.reorderPoint).toBe(5);
+    expect(hit!.deficit).toBe(3);
+    expect(rows.some((r) => r.deficit >= 1)).toBe(true);
+  });
+
+  // Smoke: getDeadStock returns an array. We don't assert specific seeded
+  // rows because earlier blocks already populated inventory + sales in
+  // overlapping ways that make a clean isolation expensive — the spec
+  // calls for a "smoke" check at this layer.
+  test("getDeadStock returns an array", async () => {
+    const { db } = await getSharedTestDatabase();
+    const { getDeadStock } = await import("../queries");
+    const rows = await getDeadStock(db as never, { since: null, limit: 50 });
+    expect(Array.isArray(rows)).toBe(true);
+  });
+});
