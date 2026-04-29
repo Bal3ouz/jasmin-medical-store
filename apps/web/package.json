@@ -14,6 +14,7 @@
     "@jasmin/db": "workspace:*",
     "@jasmin/lib": "workspace:*",
     "@jasmin/ui": "workspace:*",
+    "motion": "11.15.0",
     "@radix-ui/react-dialog": "1.1.4",
     "@supabase/ssr": "0.5.2",
     "drizzle-orm": "0.36.4",
