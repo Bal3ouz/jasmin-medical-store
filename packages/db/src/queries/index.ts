@@ -9,3 +9,4 @@ export * from "./admin-customers";
 export * from "./admin-staff";
 export * from "./admin-audit";
 export * from "./admin-dashboard";
+export * from "./bi";
