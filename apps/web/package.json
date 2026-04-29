@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start -p 3000",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'no app tests yet'"
+    "test": "echo 'no app tests yet'",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "@jasmin/db": "workspace:*",
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@jasmin/config": "workspace:*",
+    "@playwright/test": "1.49.1",
     "@tailwindcss/postcss": "4.0.0-beta.7",
     "@types/node": "22.10.2",
     "@types/react": "19.0.2",

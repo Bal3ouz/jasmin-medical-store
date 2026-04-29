@@ -1,0 +1,4 @@
+[test]
+# Exclude Playwright e2e specs from bun test runner
+# These must be run via `bun run e2e` with the Playwright CLI
+pathIgnorePatterns = ["apps/web/e2e/**"]
