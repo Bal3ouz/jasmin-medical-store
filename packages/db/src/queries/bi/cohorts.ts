@@ -77,7 +77,8 @@ export async function getCohortsMonthly(
     repeat_rate: string | number | null;
     ltv: string | number | null;
   }>(rows).map((r) => ({
-    cohortMonth: r.cohort_month instanceof Date ? r.cohort_month.toISOString() : String(r.cohort_month),
+    cohortMonth:
+      r.cohort_month instanceof Date ? r.cohort_month.toISOString() : String(r.cohort_month),
     customers: r.customers,
     ordersTotal: r.orders_total,
     revenueTotal: Number(r.revenue_total) || 0,
