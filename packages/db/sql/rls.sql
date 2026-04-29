@@ -210,3 +210,35 @@ CREATE POLICY staff_users_admin_update ON staff_users
 DROP POLICY IF EXISTS audit_log_admin_read ON audit_log;
 CREATE POLICY audit_log_admin_read ON audit_log
   FOR SELECT USING (is_staff(ARRAY['admin']::staff_role[]));
+
+-- ============================================================
+-- Phase 2 additions: order-number sequence + customer auth trigger
+-- ============================================================
+
+-- Sequence used by checkout to assign order numbers (JMS-YYYY-NNNNNN).
+CREATE SEQUENCE IF NOT EXISTS jms_order_seq START 1;
+
+-- Auth-user-created trigger: upsert a row in `customers` whenever a Supabase
+-- auth user signs up via the storefront. raw_user_meta_data carries
+-- { full_name } from supabase.auth.signUp options.data.
+CREATE OR REPLACE FUNCTION on_auth_user_created()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  INSERT INTO customers (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NULLIF(NEW.raw_user_meta_data ->> 'full_name', '')
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
+    updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION on_auth_user_created();

@@ -11,6 +11,25 @@ export const VOICE = {
   heroSubtitle: "Parapharmacie & matériel médical, sélectionné avec amour à Nabeul.",
   trustedBrandsLabel: "Marques de confiance",
   contactBaseline: "Une question ? Notre équipe est joignable du lundi au samedi.",
+  emptyCartTitle: "Votre panier est calme pour l'instant.",
+  emptyCartCta: "Découvrir la boutique",
+  checkoutTitle: "Finaliser votre commande",
+  codNotice: "Vous payez à la livraison, en main propre, en toute sérénité.",
+  orderConfirmed: "Merci ! Votre commande est entre nos mains.",
+  orderConfirmedSub:
+    "Nous préparons votre colis avec soin. Un appel de confirmation suit dans la journée.",
+  loginTitle: "Bon retour parmi nous.",
+  signupTitle: "Créez votre compte Jasmin.",
+  notreHistoireHero: "Le soin, comme un rituel.",
+  filtersLabel: "Filtres",
+  applyFiltersCta: "Appliquer",
+  clearFiltersCta: "Tout effacer",
+  addToWishlistCta: "Ajouter aux favoris",
+  outOfStockBadge: "Bientôt de retour",
+  inStockBadge: "En stock — livraison sous 48h",
+  shippingFree: "Livraison gratuite",
+  shippingFlat: "Livraison 7,000 TND",
+  shippingFreeAbove: "Livraison gratuite dès 200,000 TND",
 } as const;
 
 export type VoiceKey = keyof typeof VOICE;
