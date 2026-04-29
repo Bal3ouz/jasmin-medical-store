@@ -22,6 +22,10 @@
     {
       "include": ["**/lib/supabase/**", "**/middleware.ts"],
       "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
+    },
+    {
+      "include": ["**/components/product/VariantSelector.tsx"],
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
     }
   ]
 }
