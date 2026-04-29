@@ -4,6 +4,16 @@ import { getProductBySlug, listCategories, listPublishedProducts } from "../quer
 import { type TestDb, getSharedTestDatabase } from "./pglite-harness";
 
 /**
+ * Normalize the result of `db.execute(...)` between PGlite (which wraps rows
+ * in `.rows`) and postgres-js (which returns the row list directly).
+ */
+function pickRow<T>(res: { rows: T[] } | T[]): T {
+  const rows = Array.isArray(res) ? res : res.rows;
+  if (rows.length === 0) throw new Error("pickRow: no rows returned");
+  return rows[0]!;
+}
+
+/**
  * All schema-shape smoke tests live in this single file.
  *
  * Bun's test runner instantiates each test file in its own VM context, but
@@ -205,5 +215,101 @@ describe("query helpers", () => {
 
     const missing = await getProductBySlug(db as never, "does-not-exist");
     expect(missing).toBeNull();
+  });
+});
+
+describe("admin: audit log helper", () => {
+  // Compute the import path at runtime so TypeScript doesn't follow it into
+  // apps/admin (which lives outside packages/db's rootDir). The runtime
+  // resolution by Bun is unaffected.
+  const ADMIN_AUDIT_PATH = `${"..".repeat(1)}/../../../apps/admin/app/actions/audit`;
+
+  type RecordAuditFn = (
+    tx: unknown,
+    args: {
+      staffUserId: string;
+      action: string;
+      entityType: string;
+      entityId: string;
+      before?: Record<string, unknown> | null;
+      after?: Record<string, unknown> | null;
+    },
+  ) => Promise<void>;
+
+  async function loadRecordAudit(): Promise<RecordAuditFn> {
+    const mod = (await import(ADMIN_AUDIT_PATH)) as { recordAudit: RecordAuditFn };
+    return mod.recordAudit;
+  }
+
+  test("recordAudit inserts row with action, entity, before/after diff, performer", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`audit-test-${staffId}@jasmin.tn`}, 'Audit Tester', 'admin', true)
+    `);
+
+    const recordAudit = await loadRecordAudit();
+    const entityId = crypto.randomUUID();
+    await db.transaction(async (tx) => {
+      await recordAudit(tx, {
+        staffUserId: staffId,
+        action: "test.action",
+        entityType: "product",
+        entityId,
+        before: { name: "old" },
+        after: { name: "new" },
+      });
+    });
+
+    const rows = await db.execute(sql`
+      SELECT action, entity_type, entity_id, diff
+      FROM audit_log
+      WHERE staff_user_id = ${staffId}
+    `);
+    const row = pickRow(rows.rows) as {
+      action: string;
+      entity_type: string;
+      entity_id: string;
+      diff: { before: { name: string } | null; after: { name: string } | null };
+    };
+    expect(row.action).toBe("test.action");
+    expect(row.entity_type).toBe("product");
+    expect(row.diff.before).toEqual({ name: "old" });
+    expect(row.diff.after).toEqual({ name: "new" });
+  });
+
+  test("audit row rolls back when the outer transaction aborts", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`audit-rollback-${staffId}@jasmin.tn`}, 'Audit Rollback', 'admin', true)
+    `);
+
+    const recordAudit = await loadRecordAudit();
+    const entityId = crypto.randomUUID();
+
+    let threw = false;
+    try {
+      await db.transaction(async (tx) => {
+        await recordAudit(tx, {
+          staffUserId: staffId,
+          action: "test.rollback",
+          entityType: "product",
+          entityId,
+          before: null,
+          after: { name: "should-not-persist" },
+        });
+        throw new Error("force rollback");
+      });
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+
+    const after = await db.execute(sql`
+      SELECT count(*)::int AS n FROM audit_log WHERE staff_user_id = ${staffId}
+    `);
+    const { n } = pickRow(after.rows) as { n: number };
+    expect(n).toBe(0);
   });
 });

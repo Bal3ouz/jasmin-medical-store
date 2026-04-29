@@ -21,3 +21,11 @@ export function createClient(databaseUrl: string, { max = 1 }: CreateClientOptio
   const sql = postgres(databaseUrl, { max, prepare: false });
   return drizzle(sql, { schema });
 }
+
+/**
+ * The transaction handle passed to `db.transaction(async (tx) => { ... })`.
+ *
+ * Useful when sharing a tx with helpers (e.g. `recordAudit`) so the audit
+ * row commits and rolls back atomically with the surrounding mutation.
+ */
+export type DbTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
