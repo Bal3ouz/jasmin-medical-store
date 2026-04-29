@@ -3,6 +3,7 @@ import {
   duplicateProductAction,
   publishProductAction,
 } from "@/app/actions/products";
+import { ImageUploader } from "@/components/ImageUploader";
 import { ProductForm } from "@/components/ProductForm";
 import { VariantEditor } from "@/components/VariantEditor";
 import { getStaffSession } from "@/lib/auth";
@@ -145,10 +146,8 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
 
       <section className="mt-8">
         <h2 className="text-lg text-warm-taupe">Images</h2>
-        <div className="mt-3 rounded-2xl border border-dashed border-linen bg-cream-sand/50 p-6 text-warm-taupe-soft text-sm">
-          {images.length === 0
-            ? "Aucune image. Géré dans la prochaine itération."
-            : `${images.length} image(s). Géré dans la prochaine itération.`}
+        <div className="mt-3">
+          <ImageUploader productId={product.id} productSlug={product.slug} images={images} />
         </div>
       </section>
     </div>
