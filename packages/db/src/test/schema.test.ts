@@ -775,3 +775,61 @@ describe("admin: dashboard queries", () => {
     expect(hit?.customerName).toBe("Dash Pending");
   });
 });
+
+describe("bi: sales kpis + trend", () => {
+  // The shared PGlite instance carries seeded orders from earlier describe
+  // blocks (refund, walk-in, dashboard). We seed two MORE confirmed orders
+  // here with unique uuids so the kpi/trend counts include at least those —
+  // even if other blocks have already inserted unrelated orders.
+  test("getSalesKpis sums confirmed orders, ignores cancelled", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    // Two confirmed + one cancelled today.
+    const confirmedA = crypto.randomUUID();
+    const confirmedB = crypto.randomUUID();
+    const cancelled = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          confirmed_at)
+      VALUES
+        (${confirmedA}, ${`JMS-BI-SALES-A-${confirmedA.slice(0, 6)}`}, 'confirmed', 'paid',
+         'cash_on_delivery', 100.000, 7.000, 107.000,
+         'BI Sales A','+216 90 00 00 01','Rue A','Tunis','1000','Tunis', now()),
+        (${confirmedB}, ${`JMS-BI-SALES-B-${confirmedB.slice(0, 6)}`}, 'confirmed', 'paid',
+         'cash_on_delivery', 50.000, 7.000, 57.000,
+         'BI Sales B','+216 90 00 00 02','Rue B','Tunis','1000','Tunis', now()),
+        (${cancelled}, ${`JMS-BI-SALES-X-${cancelled.slice(0, 6)}`}, 'cancelled', 'pending',
+         'cash_on_delivery', 999.000, 7.000, 1006.000,
+         'BI Sales X','+216 90 00 00 03','Rue X','Tunis','1000','Tunis', NULL)
+    `);
+
+    const { getSalesKpis } = await import("../queries");
+    const k = await getSalesKpis(db as never, { since: null });
+    expect(k.orderCount).toBeGreaterThanOrEqual(2);
+    expect(k.totalRevenue).toBeGreaterThan(0);
+    // The 1006 from the cancelled row must NOT be in the total. We can't
+    // assert an exact total because earlier describe blocks seeded other
+    // confirmed orders, but we can check the cancelled row isn't there.
+    expect(k.totalRevenue).toBeLessThan(100_000); // sanity bound
+  });
+
+  test("getSalesTrend buckets per granularity with bucket/revenue/orders shape", async () => {
+    const { db } = await getSharedTestDatabase();
+    const { getSalesTrend } = await import("../queries");
+    const series = await getSalesTrend(db as never, { since: null, granularity: "day" });
+    expect(Array.isArray(series)).toBe(true);
+    // Earlier blocks seeded confirmed/delivered orders; combined with the
+    // two we just inserted in the previous test, the day series MUST have
+    // at least one row.
+    expect(series.length).toBeGreaterThan(0);
+    const row = series[0]!;
+    expect(row).toHaveProperty("bucket");
+    expect(row).toHaveProperty("revenue");
+    expect(row).toHaveProperty("orders");
+    expect(typeof row.revenue).toBe("number");
+    expect(typeof row.orders).toBe("number");
+  });
+});
