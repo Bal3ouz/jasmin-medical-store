@@ -920,3 +920,101 @@ describe("bi: best sellers", () => {
     }
   });
 });
+
+describe("bi: basket pairs", () => {
+  // Seeds three confirmed orders sharing three products A/B/C such that:
+  //   - order1: { A, B }
+  //   - order2: { A, B }
+  //   - order3: { A, C }
+  // Expected: pair (A,B) ranks first by count=2, with count >= every other
+  // pair returned. The self-join uses oi1.product_id < oi2.product_id, so
+  // for each unordered pair we get exactly one row regardless of insertion
+  // order.
+  test("ranks pair (A,B) first by count and yields a positive lift", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productA = crypto.randomUUID();
+    const productB = crypto.randomUUID();
+    const productC = crypto.randomUUID();
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`bk-b-${brandId.slice(0, 6)}`}, 'BKBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`bk-c-${categoryId.slice(0, 6)}`}, 'BKCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        (${productA}, ${`bk-a-${productA.slice(0, 6)}`}, 'BKProductA', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BK-A-${productA.slice(0, 6)}`}, 10.000, true),
+        (${productB}, ${`bk-b-${productB.slice(0, 6)}`}, 'BKProductB', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BK-B-${productB.slice(0, 6)}`}, 12.000, true),
+        (${productC}, ${`bk-c-${productC.slice(0, 6)}`}, 'BKProductC', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-BK-C-${productC.slice(0, 6)}`}, 14.000, true)
+    `);
+
+    const order1 = crypto.randomUUID();
+    const order2 = crypto.randomUUID();
+    const order3 = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          confirmed_at)
+      VALUES
+        (${order1}, ${`JMS-BI-BK-1-${order1.slice(0, 6)}`}, 'confirmed', 'paid',
+         'cash_on_delivery', 22.000, 7.000, 29.000,
+         'BK One','+216 90 44 44 11','Rue 1','Tunis','1000','Tunis', now()),
+        (${order2}, ${`JMS-BI-BK-2-${order2.slice(0, 6)}`}, 'confirmed', 'paid',
+         'cash_on_delivery', 22.000, 7.000, 29.000,
+         'BK Two','+216 90 44 44 22','Rue 2','Tunis','1000','Tunis', now()),
+        (${order3}, ${`JMS-BI-BK-3-${order3.slice(0, 6)}`}, 'confirmed', 'paid',
+         'cash_on_delivery', 24.000, 7.000, 31.000,
+         'BK Three','+216 90 44 44 33','Rue 3','Tunis','1000','Tunis', now())
+    `);
+    // order1: A + B
+    // order2: A + B
+    // order3: A + C
+    await db.execute(sql`
+      INSERT INTO order_items (id, order_id, product_id, product_name_snapshot, brand_snapshot, sku_snapshot, unit_price_tnd, quantity, line_total_tnd)
+      VALUES
+        (${crypto.randomUUID()}, ${order1}, ${productA}, 'BKProductA', 'BKBrand', ${`SKU-BK-A-${productA.slice(0, 6)}`}, 10.000, 1, 10.000),
+        (${crypto.randomUUID()}, ${order1}, ${productB}, 'BKProductB', 'BKBrand', ${`SKU-BK-B-${productB.slice(0, 6)}`}, 12.000, 1, 12.000),
+        (${crypto.randomUUID()}, ${order2}, ${productA}, 'BKProductA', 'BKBrand', ${`SKU-BK-A-${productA.slice(0, 6)}`}, 10.000, 1, 10.000),
+        (${crypto.randomUUID()}, ${order2}, ${productB}, 'BKProductB', 'BKBrand', ${`SKU-BK-B-${productB.slice(0, 6)}`}, 12.000, 1, 12.000),
+        (${crypto.randomUUID()}, ${order3}, ${productA}, 'BKProductA', 'BKBrand', ${`SKU-BK-A-${productA.slice(0, 6)}`}, 10.000, 1, 10.000),
+        (${crypto.randomUUID()}, ${order3}, ${productC}, 'BKProductC', 'BKBrand', ${`SKU-BK-C-${productC.slice(0, 6)}`}, 14.000, 1, 14.000)
+    `);
+
+    const { getBasketPairs } = await import("../queries");
+    const pairs = await getBasketPairs(db as never, { since: null, limit: 50 });
+
+    expect(pairs.length).toBeGreaterThan(0);
+
+    // Locate the (A,B) pair regardless of which uuid sorted lower.
+    const ab = pairs.find(
+      (p) =>
+        (p.productAId === productA && p.productBId === productB) ||
+        (p.productAId === productB && p.productBId === productA),
+    );
+    const ac = pairs.find(
+      (p) =>
+        (p.productAId === productA && p.productBId === productC) ||
+        (p.productAId === productC && p.productBId === productA),
+    );
+
+    expect(ab).toBeDefined();
+    expect(ac).toBeDefined();
+    expect(ab!.count).toBe(2);
+    expect(ac!.count).toBe(1);
+    expect(ab!.lift).toBeGreaterThan(0);
+
+    // Global ordering: pair_count DESC, so the (A,B) row must be at or
+    // above the (A,C) row in the result list, and the first row must have
+    // count >= the last row's count.
+    const abIndex = pairs.indexOf(ab!);
+    const acIndex = pairs.indexOf(ac!);
+    expect(abIndex).toBeLessThanOrEqual(acIndex);
+    expect(pairs[0]!.count).toBeGreaterThanOrEqual(pairs.at(-1)!.count);
+  });
+});
