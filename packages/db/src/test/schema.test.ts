@@ -520,6 +520,37 @@ describe("admin: refund", () => {
   });
 });
 
+describe("admin: staff invite", () => {
+  // The Phase-3 update to `on_auth_user_created()` skips the customers
+  // INSERT when `raw_user_meta_data ->> 'is_staff' = 'true'` so an invite
+  // doesn't create a stray customer row for what is in fact an internal
+  // user. The pglite harness installs the same function body — these
+  // tests pin that contract end-to-end.
+  test("on_auth_user_created skips customers row when raw_user_meta_data.is_staff='true'", async () => {
+    const userId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO auth.users (id, email, raw_user_meta_data)
+      VALUES (${userId}, ${`staff-${userId}@jasmin.tn`}, '{"is_staff":"true","full_name":"S","role":"admin"}'::jsonb)
+    `);
+    const customerRows = await db.execute(sql`
+      SELECT COUNT(*)::int as count FROM customers WHERE id = ${userId}
+    `);
+    expect(pickRow(customerRows.rows) as { count: number }).toEqual({ count: 0 });
+  });
+
+  test("on_auth_user_created creates customers row when no is_staff flag", async () => {
+    const userId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO auth.users (id, email, raw_user_meta_data)
+      VALUES (${userId}, ${`cust-${userId}@jasmin.tn`}, '{"full_name":"C"}'::jsonb)
+    `);
+    const customerRows = await db.execute(sql`
+      SELECT COUNT(*)::int as count FROM customers WHERE id = ${userId}
+    `);
+    expect(pickRow(customerRows.rows) as { count: number }).toEqual({ count: 1 });
+  });
+});
+
 describe("admin: walk-in order", () => {
   // Same runtime-string trick: keep TypeScript out of apps/admin's tree
   // while Bun resolves the spec at execution time.
