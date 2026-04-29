@@ -1067,3 +1067,81 @@ describe("bi: stock health", () => {
     expect(Array.isArray(rows)).toBe(true);
   });
 });
+
+describe("bi: cohorts", () => {
+  // Seeds one customer with two confirmed orders ~1 month apart. The
+  // cohort = month of first order; the customer has 2 lifetime orders so
+  // they MUST count as "repeat" → repeat_rate for that cohort > 0. We
+  // can't assert exact values across the whole result because earlier
+  // describe blocks seeded other orders without customer_id (guests are
+  // excluded from cohorts entirely — the SQL filters customer_id IS NOT
+  // NULL), but the cohort row for our seeded customer must be present.
+  test("repeat customer with 2 orders ~1 month apart shows up with repeatRate > 0", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productId = crypto.randomUUID();
+    const customerId = crypto.randomUUID();
+    const order1 = crypto.randomUUID();
+    const order2 = crypto.randomUUID();
+
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`co-b-${brandId.slice(0, 6)}`}, 'COBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`co-c-${categoryId.slice(0, 6)}`}, 'COCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        (${productId}, ${`co-p-${productId.slice(0, 6)}`}, 'COProduct', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-CO-${productId.slice(0, 6)}`}, 50.000, true)
+    `);
+    await db.execute(sql`
+      INSERT INTO customers (id, email, full_name)
+      VALUES (${customerId}, ${`co-${customerId.slice(0, 6)}@jasmin.test`}, 'CO Customer')
+    `);
+
+    // Two confirmed orders, same customer, 1 month apart (Jan 15 → Feb 15
+    // 2026). created_at is set explicitly so the cohort_month is
+    // deterministic regardless of when the test runs.
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, customer_id, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          confirmed_at, created_at)
+      VALUES
+        (${order1}, ${`JMS-BI-CO-1-${order1.slice(0, 6)}`}, ${customerId}, 'confirmed', 'paid',
+         'cash_on_delivery', 50.000, 7.000, 57.000,
+         'CO One','+216 90 55 55 11','Rue 1','Tunis','1000','Tunis',
+         '2026-01-15T10:00:00Z', '2026-01-15T10:00:00Z'),
+        (${order2}, ${`JMS-BI-CO-2-${order2.slice(0, 6)}`}, ${customerId}, 'confirmed', 'paid',
+         'cash_on_delivery', 50.000, 7.000, 57.000,
+         'CO Two','+216 90 55 55 22','Rue 2','Tunis','1000','Tunis',
+         '2026-02-15T10:00:00Z', '2026-02-15T10:00:00Z')
+    `);
+
+    const { getCohortsMonthly } = await import("../queries");
+    const rows = await getCohortsMonthly(db as never, { since: null });
+
+    expect(rows.length).toBeGreaterThan(0);
+
+    // Find the cohort row for January 2026 — that's our seeded customer's
+    // first-order month.
+    const janCohort = rows.find((r) => {
+      const d = new Date(r.cohortMonth);
+      return d.getUTCFullYear() === 2026 && d.getUTCMonth() === 0;
+    });
+    expect(janCohort).toBeDefined();
+    expect(janCohort!.customers).toBeGreaterThanOrEqual(1);
+    // Our customer placed 2 lifetime orders → counts as a "repeat" buyer
+    // → repeat_rate for the cohort must be > 0.
+    expect(janCohort!.repeatRate).toBeGreaterThan(0);
+    // ordersTotal includes both Jan + Feb orders for our customer (LTV is
+    // lifetime, not period-bounded).
+    expect(janCohort!.ordersTotal).toBeGreaterThanOrEqual(2);
+    expect(janCohort!.revenueTotal).toBeGreaterThan(0);
+    expect(janCohort!.ltv).toBeGreaterThan(0);
+  });
+});
