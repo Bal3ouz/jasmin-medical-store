@@ -666,3 +666,112 @@ describe("admin: walk-in order", () => {
     expect(evTypes).toContain("confirmed");
   });
 });
+
+describe("admin: dashboard queries", () => {
+  // The pglite harness is shared across describe blocks so prior seeding
+  // (low-stock rows from `inventory_public`, refund/walk-in fixtures, etc.)
+  // is already visible to these queries. We don't assert exact counts —
+  // only that helpers return the right shape and that a freshly-seeded
+  // low-stock row + delivered order are reflected in the results.
+
+  test("countLowStockItems and countPublishedProducts return numbers", async () => {
+    const { countLowStockItems, countPublishedProducts } = await import("../queries");
+    const lowN = await countLowStockItems(db as never);
+    const pubN = await countPublishedProducts(db as never);
+    expect(typeof lowN).toBe("number");
+    expect(typeof pubN).toBe("number");
+    expect(lowN).toBeGreaterThanOrEqual(0);
+    expect(pubN).toBeGreaterThanOrEqual(0);
+  });
+
+  test("listLowStockItems resolves names through both product- and variant-keyed inventory rows", async () => {
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productFlatId = crypto.randomUUID();
+    const productVariantParentId = crypto.randomUUID();
+    const variantId = crypto.randomUUID();
+
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`dash-b-${brandId.slice(0, 6)}`}, 'DashBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`dash-c-${categoryId.slice(0, 6)}`}, 'DashCat')`,
+    );
+    // Flat product (inventory keyed by product_id).
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES (${productFlatId}, ${`dash-flat-${productFlatId.slice(0, 6)}`}, 'DashFlat', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-DASH-FLAT-${productFlatId.slice(0, 6)}`}, 10.000, true)
+    `);
+    await db.execute(
+      sql`INSERT INTO inventory (product_id, on_hand, reorder_point) VALUES (${productFlatId}, 2, 5)`,
+    );
+    // Variant-bearing product (inventory keyed by variant_id only).
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, is_published)
+      VALUES (${productVariantParentId}, ${`dash-pv-${productVariantParentId.slice(0, 6)}`}, 'DashVariantParent', ${brandId}, ${categoryId}, 'x', 'x', true, true)
+    `);
+    await db.execute(sql`
+      INSERT INTO product_variants (id, product_id, sku, name, price_tnd)
+      VALUES (${variantId}, ${productVariantParentId}, ${`SKU-DASH-VAR-${variantId.slice(0, 6)}`}, 'DashVariant 50ml', 12.000)
+    `);
+    await db.execute(
+      sql`INSERT INTO inventory (variant_id, on_hand, reorder_point) VALUES (${variantId}, 1, 5)`,
+    );
+
+    const { countLowStockItems, listLowStockItems } = await import("../queries");
+    const n = await countLowStockItems(db as never);
+    expect(n).toBeGreaterThanOrEqual(2);
+
+    const rows = await listLowStockItems(db as never, 50);
+    const flatHit = rows.find((r) => r.productId === productFlatId);
+    expect(flatHit?.productName).toBe("DashFlat");
+    expect(flatHit?.brandName).toBe("DashBrand");
+
+    const variantHit = rows.find((r) => r.variantId === variantId);
+    expect(variantHit?.productName).toBe("DashVariantParent");
+    expect(variantHit?.variantName).toBe("DashVariant 50ml");
+    expect(variantHit?.brandName).toBe("DashBrand");
+  });
+
+  test("getTodayRevenue and listPendingOrders pick up a freshly-seeded order", async () => {
+    const orderPendingId = crypto.randomUUID();
+    const orderDeliveredId = crypto.randomUUID();
+
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate)
+      VALUES (${orderPendingId}, ${`JMS-DASH-PEND-${orderPendingId.slice(0, 6)}`}, 'pending', 'pending',
+              'cash_on_delivery',
+              50.000, 7.000, 57.000,
+              'Dash Pending','+216 11 22 33 44','Rue D','Tunis','1000','Tunis')
+    `);
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          delivered_at)
+      VALUES (${orderDeliveredId}, ${`JMS-DASH-DELIV-${orderDeliveredId.slice(0, 6)}`}, 'delivered', 'paid',
+              'cash_on_delivery',
+              80.000, 7.000, 87.000,
+              'Dash Delivered','+216 22 33 44 55','Rue E','Tunis','1000','Tunis', now())
+    `);
+
+    const { countPendingOrders, getTodayRevenue, listPendingOrders } = await import("../queries");
+
+    const today = await getTodayRevenue(db as never);
+    expect(typeof today.totalTnd).toBe("number");
+    expect(today.orderCount).toBeGreaterThanOrEqual(1);
+    expect(today.totalTnd).toBeGreaterThanOrEqual(0);
+
+    const pendingCount = await countPendingOrders(db as never);
+    expect(pendingCount).toBeGreaterThanOrEqual(1);
+
+    const pendingRows = await listPendingOrders(db as never, 50);
+    const hit = pendingRows.find((r) => r.id === orderPendingId);
+    expect(hit).toBeDefined();
+    expect(hit?.customerName).toBe("Dash Pending");
+  });
+});
