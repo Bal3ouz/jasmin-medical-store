@@ -4,6 +4,7 @@ import {
   publishProductAction,
 } from "@/app/actions/products";
 import { ProductForm } from "@/components/ProductForm";
+import { VariantEditor } from "@/components/VariantEditor";
 import { getStaffSession } from "@/lib/auth";
 import { createClient } from "@jasmin/db";
 import { getProductForEdit, listAllBrands, listAllCategories } from "@jasmin/db/queries";
@@ -128,13 +129,17 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
         />
       </div>
 
-      {/* Placeholder sections — Tasks 4.5 (variants) and 4.6 (images) fill in. */}
       <section className="mt-12">
         <h2 className="text-lg text-warm-taupe">Déclinaisons</h2>
-        <div className="mt-3 rounded-2xl border border-dashed border-linen bg-cream-sand/50 p-6 text-warm-taupe-soft text-sm">
-          {variants.length === 0
-            ? "Aucune déclinaison. Géré dans la prochaine itération."
-            : `${variants.length} déclinaison(s). Géré dans la prochaine itération.`}
+        <div className="mt-3">
+          {product.hasVariants ? (
+            <VariantEditor productId={product.id} variants={variants} />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-linen bg-cream-sand/50 p-6 text-warm-taupe-soft text-sm">
+              Activez « Le produit a des déclinaisons » dans le formulaire ci-dessus pour gérer les
+              variantes (et leur stock par déclinaison).
+            </div>
+          )}
         </div>
       </section>
 
