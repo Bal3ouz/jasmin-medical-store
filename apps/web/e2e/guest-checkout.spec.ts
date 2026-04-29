@@ -23,11 +23,11 @@ test("guest can browse → add to cart → checkout COD → see confirmation", a
 
   await page.goto("/commande");
   await page.getByLabel("Nom complet").fill("Test Acheteur");
-  await page.getByLabel("Téléphone").first().fill("+216 22 110 220");
-  await page.getByLabel("Adresse").fill("12 rue Ibn Khaldoun");
-  await page.getByLabel("Ville").fill("Nabeul");
-  await page.getByLabel("Code postal").fill("8000");
-  await page.getByLabel("Email").fill("guest+e2e@example.tn");
+  await page.locator('input[name="phone"]').first().fill("+216 22 110 220");
+  await page.locator('input[name="street"]').fill("12 rue Ibn Khaldoun");
+  await page.locator('input[name="city"]').fill("Nabeul");
+  await page.locator('input[name="postalCode"]').fill("8000");
+  await page.locator('input[name="email"]').first().fill("guest+e2e@example.tn");
 
   await page.getByRole("button", { name: /Confirmer la commande/i }).click();
   await expect(page).toHaveURL(/\/commande\/confirmation\//);

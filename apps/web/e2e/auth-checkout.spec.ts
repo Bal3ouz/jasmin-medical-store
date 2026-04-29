@@ -8,7 +8,7 @@ test("authenticated user signup → login → checkout → order in /compte/comm
 }) => {
   await page.goto("/compte/inscription");
   await page.getByLabel("Nom complet").fill("E2E User");
-  await page.getByLabel("Email").fill(email);
+  await page.locator('input[name="email"]').first().fill(email);
   await page.getByLabel(/Mot de passe/).fill(password);
   await page.getByRole("button", { name: /Créer mon compte/i }).click();
 
@@ -20,10 +20,10 @@ test("authenticated user signup → login → checkout → order in /compte/comm
 
   await page.goto("/commande");
   await page.getByLabel("Nom complet").fill("E2E User");
-  await page.getByLabel("Téléphone").first().fill("+216 22 110 220");
-  await page.getByLabel("Adresse").fill("12 rue Ibn Khaldoun");
-  await page.getByLabel("Ville").fill("Nabeul");
-  await page.getByLabel("Code postal").fill("8000");
+  await page.locator('input[name="phone"]').first().fill("+216 22 110 220");
+  await page.locator('input[name="street"]').fill("12 rue Ibn Khaldoun");
+  await page.locator('input[name="city"]').fill("Nabeul");
+  await page.locator('input[name="postalCode"]').fill("8000");
   await page.getByRole("button", { name: /Confirmer la commande/i }).click();
 
   await expect(page).toHaveURL(/\/commande\/confirmation\//);
