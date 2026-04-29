@@ -30,6 +30,18 @@ export const VOICE = {
   shippingFree: "Livraison gratuite",
   shippingFlat: "Livraison 7,000 TND",
   shippingFreeAbove: "Livraison gratuite dès 200,000 TND",
+  dashboardWelcome: "Bonjour {name}, voici l'essentiel du jour.",
+  emptyOrdersQueue: "Aucune commande en attente. Belle journée !",
+  emptyLowStock: "Tous les rayons sont bien remplis.",
+  inviteSent: "Invitation envoyée. Votre collègue recevra un lien magique.",
+  refundConfirmed: "Remboursement enregistré, le stock est rétabli.",
+  walkInOrderCreated: "Vente en magasin enregistrée.",
+  productPublished: "Produit publié — visible sur la boutique.",
+  productUnpublished: "Produit masqué — retiré de la boutique.",
+  variantAdded: "Déclinaison ajoutée.",
+  inventoryAdjusted: "Stock ajusté.",
+  auditLogEmpty: "Aucun événement pour ces filtres.",
+  posPaymentLabel: "Espèces",
 } as const;
 
 export type VoiceKey = keyof typeof VOICE;
