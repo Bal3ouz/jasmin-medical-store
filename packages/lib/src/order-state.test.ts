@@ -36,10 +36,7 @@ describe("canTransition", () => {
 
 describe("allowedNextStates", () => {
   test("admin from pending: confirmed + cancelled", () => {
-    expect(allowedNextStates("pending", "admin").sort()).toEqual([
-      "cancelled",
-      "confirmed",
-    ]);
+    expect(allowedNextStates("pending", "admin").sort()).toEqual(["cancelled", "confirmed"]);
   });
 
   test("cashier from shipped: delivered only", () => {

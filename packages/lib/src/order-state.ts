@@ -45,19 +45,12 @@ export const ORDER_TRANSITIONS: TransitionMap = {
   refunded: {},
 };
 
-export function canTransition(
-  from: OrderStatus,
-  to: OrderStatus,
-  role: StaffRole,
-): boolean {
+export function canTransition(from: OrderStatus, to: OrderStatus, role: StaffRole): boolean {
   const roles = ORDER_TRANSITIONS[from]?.[to];
   return Array.isArray(roles) && roles.includes(role);
 }
 
-export function allowedNextStates(
-  from: OrderStatus,
-  role: StaffRole,
-): OrderStatus[] {
+export function allowedNextStates(from: OrderStatus, role: StaffRole): OrderStatus[] {
   return Object.entries(ORDER_TRANSITIONS[from] ?? {})
     .filter(([, roles]) => Array.isArray(roles) && roles.includes(role))
     .map(([s]) => s as OrderStatus);
