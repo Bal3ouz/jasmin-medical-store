@@ -1,4 +1,5 @@
 import { AiryContainer, BodyText, Button, H1Editorial, Input, Logo } from "@jasmin/ui";
+import Link from "next/link";
 import { signInAction } from "./actions";
 
 export default function LoginPage() {
@@ -35,6 +36,12 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
           </div>
+          <Link
+            href="/login/mot-de-passe-oublie"
+            className="block text-xs text-warm-taupe-soft hover:text-deep-teal"
+          >
+            Mot de passe oublié ?
+          </Link>
           <Button type="submit" className="w-full">
             Se connecter
           </Button>
