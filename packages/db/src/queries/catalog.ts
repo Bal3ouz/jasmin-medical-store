@@ -54,7 +54,22 @@ export async function listPublishedProducts(
   if (opts.categorySlug) {
     const cat = await getCategoryBySlug(db, opts.categorySlug);
     if (!cat) return [];
-    conds.push(eq(products.categoryId, cat.id));
+    // Recurse into descendants so that visiting a parent category (e.g. "cosmetique")
+    // surfaces all products under its leaves (visage, corps, solaire, cheveux).
+    const descendants = await db.execute<{ id: string }>(sql`
+      WITH RECURSIVE tree AS (
+        SELECT id FROM categories WHERE id = ${cat.id}
+        UNION ALL
+        SELECT c.id FROM categories c JOIN tree t ON c.parent_id = t.id
+      )
+      SELECT id FROM tree
+    `);
+    const descendantRows = Array.isArray(descendants)
+      ? (descendants as { id: string }[])
+      : ((descendants as { rows: { id: string }[] }).rows ?? []);
+    const ids = descendantRows.map((r) => r.id);
+    if (ids.length === 0) return [];
+    conds.push(inArray(products.categoryId, ids));
   }
   if (opts.brandSlug) {
     const brandRows = await db.select().from(brands).where(eq(brands.slug, opts.brandSlug));

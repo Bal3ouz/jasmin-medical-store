@@ -15,12 +15,16 @@
     "generate": "drizzle-kit generate",
     "migrate": "bun src/migrate.ts",
     "seed": "bun src/seed/index.ts",
+    "seed:extended": "bun src/seed/extended.ts",
+    "upload-images": "bun src/seed/upload-images.ts",
+    "seed:demo-staff": "bun src/seed/demo-staff.ts",
     "studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
     "@jasmin/lib": "workspace:*",
+    "@supabase/supabase-js": "2.46.2",
     "drizzle-orm": "0.36.4",
     "postgres": "3.4.5"
   },
