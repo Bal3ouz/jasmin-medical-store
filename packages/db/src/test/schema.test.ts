@@ -519,3 +519,119 @@ describe("admin: refund", () => {
     expect(move.reference_id).toBe(orderId);
   });
 });
+
+describe("admin: walk-in order", () => {
+  // Same runtime-string trick: keep TypeScript out of apps/admin's tree
+  // while Bun resolves the spec at execution time.
+  const ADMIN_WALKIN_PATH = `${"..".repeat(1)}/../../../apps/admin/app/actions/walkInOrder`;
+
+  type CreateWalkInOrderCoreFn = (
+    database: unknown,
+    params: {
+      staffUserId: string;
+      role: "admin" | "manager" | "cashier" | "stock";
+      customerId?: string | null;
+      guestFullName?: string | null;
+      guestPhone?: string | null;
+      notesInternal?: string | null;
+      lines: Array<{ productId: string; variantId?: string | null; quantity: number }>;
+    },
+  ) => Promise<{ orderNumber: string; orderId: string }>;
+
+  async function loadWalkIn(): Promise<CreateWalkInOrderCoreFn> {
+    const mod = (await import(ADMIN_WALKIN_PATH)) as {
+      createWalkInOrderCore: CreateWalkInOrderCoreFn;
+    };
+    return mod.createWalkInOrderCore;
+  }
+
+  test("createWalkInOrderCore atomically creates confirmed paid order + decrements inventory", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`pos-${staffId}@jasmin.tn`}, 'POS Tester', 'cashier', true)
+    `);
+
+    // Seed brand + category + product + inventory(10).
+    const productId = crypto.randomUUID();
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`pos-b-${brandId.slice(0, 6)}`}, 'PosBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`pos-c-${categoryId.slice(0, 6)}`}, 'PosCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES (${productId}, ${`pos-p-${productId.slice(0, 6)}`}, 'PosProd', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-POS-${productId.slice(0, 6)}`}, 25.000, true)
+    `);
+    await db.execute(
+      sql`INSERT INTO inventory (product_id, on_hand, reserved, reorder_point) VALUES (${productId}, 10, 0, 5)`,
+    );
+
+    const createWalkInOrderCore = await loadWalkIn();
+    const result = await createWalkInOrderCore(db, {
+      staffUserId: staffId,
+      role: "cashier",
+      customerId: null,
+      guestFullName: "Walk-in",
+      guestPhone: "+216 22 33 44 55",
+      notesInternal: null,
+      lines: [{ productId, variantId: null, quantity: 3 }],
+    });
+
+    expect(result.orderNumber).toMatch(/^JMS-\d{4}-\d{6,}$/);
+
+    // Inventory decremented 10 → 7.
+    const invRows = await db.execute(sql`
+      SELECT on_hand FROM inventory WHERE product_id = ${productId}
+    `);
+    expect((pickRow(invRows.rows) as { on_hand: number }).on_hand).toBe(7);
+
+    // Order row exists with confirmed/paid/cash_on_delivery, confirmed_at set.
+    const orderRows = await db.execute(sql`
+      SELECT id, status, payment_method, payment_status, confirmed_at
+      FROM orders WHERE order_number = ${result.orderNumber}
+    `);
+    const order = pickRow(orderRows.rows) as {
+      id: string;
+      status: string;
+      payment_method: string;
+      payment_status: string;
+      confirmed_at: string | null;
+    };
+    expect(order.status).toBe("confirmed");
+    expect(order.payment_method).toBe("cash_on_delivery");
+    expect(order.payment_status).toBe("paid");
+    expect(order.confirmed_at).not.toBeNull();
+    expect(order.id).toBe(result.orderId);
+
+    // Order item with quantity=3.
+    const itemRows = await db.execute(sql`
+      SELECT quantity FROM order_items WHERE order_id = ${result.orderId}
+    `);
+    expect((pickRow(itemRows.rows) as { quantity: number }).quantity).toBe(3);
+
+    // Stock movement: sale, -3, ref order.
+    const moveRows = await db.execute(sql`
+      SELECT type, quantity, reference_id FROM stock_movements WHERE reference_id = ${result.orderId}
+    `);
+    const move = pickRow(moveRows.rows) as {
+      type: string;
+      quantity: number;
+      reference_id: string;
+    };
+    expect(move.type).toBe("sale");
+    expect(move.quantity).toBe(-3);
+    expect(move.reference_id).toBe(result.orderId);
+
+    // Two order_events: 'created' AND 'confirmed'.
+    const evRows = await db.execute(sql`
+      SELECT event_type FROM order_events WHERE order_id = ${result.orderId} ORDER BY performed_at ASC
+    `);
+    const evTypes = (evRows.rows as { event_type: string }[]).map((r) => r.event_type);
+    expect(evTypes).toContain("created");
+    expect(evTypes).toContain("confirmed");
+  });
+});
