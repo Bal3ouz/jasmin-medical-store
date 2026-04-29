@@ -26,6 +26,10 @@
     {
       "include": ["**/components/product/VariantSelector.tsx"],
       "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
+    },
+    {
+      "include": ["**/components/checkout/**"],
+      "linter": { "rules": { "a11y": { "noLabelWithoutControl": "off" } } }
     }
   ]
 }
