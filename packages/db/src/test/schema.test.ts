@@ -1145,3 +1145,62 @@ describe("bi: cohorts", () => {
     expect(janCohort!.ltv).toBeGreaterThan(0);
   });
 });
+
+describe("bi: funnel", () => {
+  // Seeds a newsletter subscriber whose email matches a customer that has a
+  // confirmed order. With those rows present the funnel must report ≥1
+  // subscriber AND ≥1 subscriberWhoOrdered. Note: per spec §13 + plan note,
+  // the implementation must NOT filter on `confirmed_at IS NOT NULL` (Phase
+  // 2 doesn't populate it today), so this seed leaves confirmed_at NULL.
+  test("subscriber with matching customer + confirmed order counts as ordered", async () => {
+    const { db } = await getSharedTestDatabase();
+
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    const productId = crypto.randomUUID();
+    const customerId = crypto.randomUUID();
+    const orderId = crypto.randomUUID();
+    const subscriberId = crypto.randomUUID();
+    const email = `funnel-test-${customerId.slice(0, 6)}@jasmin.tn`;
+
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`fn-b-${brandId.slice(0, 6)}`}, 'FNBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`fn-c-${categoryId.slice(0, 6)}`}, 'FNCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES
+        (${productId}, ${`fn-p-${productId.slice(0, 6)}`}, 'FNProduct', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-FN-${productId.slice(0, 6)}`}, 40.000, true)
+    `);
+    await db.execute(sql`
+      INSERT INTO customers (id, email, full_name)
+      VALUES (${customerId}, ${email}, 'Funnel Customer')
+    `);
+    await db.execute(sql`
+      INSERT INTO newsletter_subscribers (id, email, customer_id, source)
+      VALUES (${subscriberId}, ${email}, ${customerId}, 'test')
+    `);
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, customer_id, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          confirmed_at, created_at)
+      VALUES
+        (${orderId}, ${`JMS-BI-FN-${orderId.slice(0, 6)}`}, ${customerId}, 'confirmed', 'paid',
+         'cash_on_delivery', 40.000, 7.000, 47.000,
+         'Funnel One','+216 90 66 66 11','Rue 1','Tunis','1000','Tunis',
+         '2026-03-15T10:00:00Z', '2026-03-15T10:00:00Z')
+    `);
+
+    const { getNewsletterFunnel } = await import("../queries");
+    const f = await getNewsletterFunnel(db as never, { since: null });
+
+    expect(f.subscribers).toBeGreaterThan(0);
+    expect(f.subscribersWhoOrdered).toBeGreaterThan(0);
+    expect(f.conversionRate).toBeGreaterThan(0);
+    expect(f.conversionRate).toBeLessThanOrEqual(1);
+  });
+});
