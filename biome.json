@@ -30,6 +30,10 @@
     {
       "include": ["**/components/checkout/**"],
       "linter": { "rules": { "a11y": { "noLabelWithoutControl": "off" } } }
+    },
+    {
+      "include": ["**/components/auth/**"],
+      "linter": { "rules": { "a11y": { "noLabelWithoutControl": "off" } } }
     }
   ]
 }
