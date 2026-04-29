@@ -1,6 +1,7 @@
 import { addInternalNoteAction } from "@/app/actions/orders";
 import { OrderStateBadge } from "@/components/OrderStateBadge";
 import { OrderTransitionMenu } from "@/components/OrderTransitionMenu";
+import { RefundDialog } from "@/components/RefundDialog";
 import { getStaffSession } from "@/lib/auth";
 import { createClient } from "@jasmin/db";
 import { getOrderForAdmin } from "@jasmin/db/queries";
@@ -142,13 +143,31 @@ export default async function OrderDetailPage(props: {
       <aside className="space-y-6">
         <div className="rounded-2xl bg-linen p-6">
           <div className="text-warm-taupe-soft text-xs uppercase tracking-[0.16em]">Actions</div>
-          <div className="mt-3">
-            <OrderTransitionMenu
-              orderId={order.id}
-              orderNumber={order.orderNumber}
-              status={order.status}
-              role={session.role}
-            />
+          <div className="mt-3 space-y-3">
+            {(() => {
+              // Admins see the refund flow as a confirm-and-reason dialog,
+              // not as a one-click button in the transition menu. The
+              // dedicated UI captures intent (and an optional reason) so the
+              // ledger entry has context. We hide `refunded` from the
+              // transition menu in that case to avoid two paths.
+              const showRefund =
+                session.role === "admin" &&
+                (order.status === "shipped" || order.status === "delivered");
+              return (
+                <>
+                  <OrderTransitionMenu
+                    orderId={order.id}
+                    orderNumber={order.orderNumber}
+                    status={order.status}
+                    role={session.role}
+                    hideRefund={showRefund}
+                  />
+                  {showRefund ? (
+                    <RefundDialog orderId={order.id} orderNumber={order.orderNumber} />
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
         </div>
 

@@ -430,3 +430,92 @@ describe("admin: order transitions", () => {
     ).rejects.toThrow(/Forbidden|not allowed|interdit/i);
   });
 });
+
+describe("admin: refund", () => {
+  // Same runtime-string trick as the orders block — keep TypeScript out of
+  // apps/admin's tree while Bun resolves the spec at execution time.
+  const ADMIN_REFUND_PATH = `${"..".repeat(1)}/../../../apps/admin/app/actions/refund`;
+
+  type RefundOrderCoreFn = (
+    tx: unknown,
+    p: { orderId: string; staffUserId: string; reason?: string | null },
+  ) => Promise<unknown>;
+
+  async function loadRefund(): Promise<RefundOrderCoreFn> {
+    const mod = (await import(ADMIN_REFUND_PATH)) as { refundOrderCore: RefundOrderCoreFn };
+    return mod.refundOrderCore;
+  }
+
+  test("refundOrder revives inventory, writes return movements, flips status", async () => {
+    const staffId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO staff_users (id, email, full_name, role, is_active)
+      VALUES (${staffId}, ${`refund-admin-${staffId}@jasmin.tn`}, 'Refund Admin', 'admin', true)
+    `);
+
+    // Seed product + brand + category + inventory(7).
+    const productId = crypto.randomUUID();
+    const brandId = crypto.randomUUID();
+    const categoryId = crypto.randomUUID();
+    await db.execute(
+      sql`INSERT INTO brands (id, slug, name) VALUES (${brandId}, ${`refund-b-${brandId.slice(0, 6)}`}, 'RefundBrand')`,
+    );
+    await db.execute(
+      sql`INSERT INTO categories (id, slug, name) VALUES (${categoryId}, ${`refund-c-${categoryId.slice(0, 6)}`}, 'RefundCat')`,
+    );
+    await db.execute(sql`
+      INSERT INTO products (id, slug, name, brand_id, category_id, short_description, description, has_variants, sku, price_tnd, is_published)
+      VALUES (${productId}, ${`refund-p-${productId.slice(0, 6)}`}, 'RefundProd', ${brandId}, ${categoryId}, 'x', 'x', false, ${`SKU-RFD-${productId.slice(0, 6)}`}, 50.000, true)
+    `);
+    await db.execute(
+      sql`INSERT INTO inventory (product_id, on_hand, reserved, reorder_point) VALUES (${productId}, 7, 0, 5)`,
+    );
+
+    // Seed a delivered order with 2 units of that product.
+    const orderId = crypto.randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, order_number, status, payment_status, payment_method,
+                          subtotal_tnd, shipping_tnd, total_tnd,
+                          shipping_full_name, shipping_phone, shipping_street,
+                          shipping_city, shipping_postal_code, shipping_governorate,
+                          delivered_at)
+      VALUES (${orderId}, ${`JMS-2026-RFD-${orderId.slice(0, 6)}`}, 'delivered', 'paid', 'cash_on_delivery',
+              100.0, 7.0, 107.0,
+              'Tester','+216 11 22 33','Rue Y','Nabeul','8000','Nabeul', now())
+    `);
+    await db.execute(sql`
+      INSERT INTO order_items (id, order_id, product_id, product_name_snapshot, brand_snapshot, sku_snapshot, unit_price_tnd, quantity, line_total_tnd)
+      VALUES (${crypto.randomUUID()}, ${orderId}, ${productId}, 'RefundProd', 'RefundBrand', ${`SKU-RFD-${productId.slice(0, 6)}`}, 50.000, 2, 100.000)
+    `);
+
+    const refundOrderCore = await loadRefund();
+    await db.transaction(async (tx) => {
+      await refundOrderCore(tx, { orderId, staffUserId: staffId, reason: "client retour" });
+    });
+
+    const orderRows = await db.execute(sql`
+      SELECT status, payment_status FROM orders WHERE id = ${orderId}
+    `);
+    const order = pickRow(orderRows.rows) as { status: string; payment_status: string };
+    expect(order.status).toBe("refunded");
+    expect(order.payment_status).toBe("refunded");
+
+    const invRows = await db.execute(sql`
+      SELECT on_hand FROM inventory WHERE product_id = ${productId}
+    `);
+    const inv = pickRow(invRows.rows) as { on_hand: number };
+    expect(inv.on_hand).toBe(9); // 7 + 2
+
+    const moveRows = await db.execute(sql`
+      SELECT type, quantity, reference_id FROM stock_movements WHERE reference_id = ${orderId}
+    `);
+    const move = pickRow(moveRows.rows) as {
+      type: string;
+      quantity: number;
+      reference_id: string;
+    };
+    expect(move.type).toBe("return");
+    expect(move.quantity).toBe(2);
+    expect(move.reference_id).toBe(orderId);
+  });
+});
