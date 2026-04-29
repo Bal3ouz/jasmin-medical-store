@@ -1,6 +1,7 @@
-import { Logo, MiniCart } from "@jasmin/ui";
+import { Logo } from "@jasmin/ui";
 import { Search, User } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { MobileMenu } from "./MobileMenu";
 
 const NAV = [
@@ -14,10 +15,10 @@ const NAV = [
 
 export interface TopNavProps {
   variant?: "cream" | "default";
-  cartCount?: number;
+  CartDrawerSlot: ReactNode;
 }
 
-export function TopNav({ variant = "default", cartCount = 0 }: TopNavProps) {
+export function TopNav({ variant = "default", CartDrawerSlot }: TopNavProps) {
   const isOnTeal = variant === "cream";
   return (
     <header
@@ -58,7 +59,7 @@ export function TopNav({ variant = "default", cartCount = 0 }: TopNavProps) {
           >
             <User className="h-5 w-5" />
           </Link>
-          <MiniCart count={cartCount} variant={isOnTeal ? "cream" : "default"} />
+          {CartDrawerSlot}
           <MobileMenu items={NAV} />
         </div>
       </div>
