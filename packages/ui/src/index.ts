@@ -28,3 +28,9 @@ export {
 export { getImageUrl } from "./image-url";
 export { MiniCart, type MiniCartProps } from "./components/MiniCart";
 export { ProductCard, type ProductCardData } from "./components/ProductCard";
+export { Stat, type StatProps } from "./components/stat";
+export {
+  DataTable,
+  type Column,
+  type DataTableProps,
+} from "./components/data-table";
