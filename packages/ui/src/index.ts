@@ -27,3 +27,4 @@ export {
 } from "./components/ProductImageFallback";
 export { getImageUrl } from "./image-url";
 export { MiniCart, type MiniCartProps } from "./components/MiniCart";
+export { ProductCard, type ProductCardData } from "./components/ProductCard";
