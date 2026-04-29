@@ -56,6 +56,8 @@ test("admin walks order through pending → confirmed → preparing → shipped 
   // 4 transitions). The "Historique" section is the only `<ul>` rendered
   // inside the events `<section>`; we anchor on the heading and count
   // its sibling list items.
-  const historySection = page.locator("section", { has: page.getByRole("heading", { name: "Historique" }) });
+  const historySection = page.locator("section", {
+    has: page.getByRole("heading", { name: "Historique" }),
+  });
   await expect(historySection.locator("ul > li")).toHaveCount(5, { timeout: 5_000 });
 });

@@ -36,16 +36,20 @@ test("admin creates + publishes product, appears on storefront", async ({ page, 
 
   // Brand + category — pick the first non-placeholder option.
   const brandSelect = page.locator("select[name='brandId']");
-  const brandValues = await brandSelect.locator("option").evaluateAll((opts) =>
-    (opts as HTMLOptionElement[]).map((o) => o.value).filter((v) => v.length > 0),
-  );
+  const brandValues = await brandSelect
+    .locator("option")
+    .evaluateAll((opts) =>
+      (opts as HTMLOptionElement[]).map((o) => o.value).filter((v) => v.length > 0),
+    );
   expect(brandValues.length, "seed must include at least one brand").toBeGreaterThan(0);
   await brandSelect.selectOption(brandValues[0]!);
 
   const categorySelect = page.locator("select[name='categoryId']");
-  const categoryValues = await categorySelect.locator("option").evaluateAll((opts) =>
-    (opts as HTMLOptionElement[]).map((o) => o.value).filter((v) => v.length > 0),
-  );
+  const categoryValues = await categorySelect
+    .locator("option")
+    .evaluateAll((opts) =>
+      (opts as HTMLOptionElement[]).map((o) => o.value).filter((v) => v.length > 0),
+    );
   expect(categoryValues.length, "seed must include at least one category").toBeGreaterThan(0);
   await categorySelect.selectOption(categoryValues[0]!);
 
