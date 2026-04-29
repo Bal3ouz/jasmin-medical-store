@@ -3,11 +3,42 @@ import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import { FilterToolbar } from "@/components/shop/FilterToolbar";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { createClient } from "@jasmin/db";
-import { getCategoryBySlug, listBrands, listPublishedProducts } from "@jasmin/db/queries";
+import {
+  getCategoryBySlug,
+  listBrands,
+  listCategories,
+  listPublishedProducts,
+} from "@jasmin/db/queries";
 import { AiryContainer, Breadcrumbs } from "@jasmin/ui";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const dbUrl = process.env.SUPABASE_DB_URL;
+  if (!dbUrl) return [];
+  const db = createClient(dbUrl);
+  const all = await listCategories(db);
+  return all.map((c) => ({ category: c.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}): Promise<Metadata> {
+  const { category } = await params;
+  const dbUrl = process.env.SUPABASE_DB_URL;
+  if (!dbUrl) return { title: "Boutique" };
+  const db = createClient(dbUrl);
+  const cat = await getCategoryBySlug(db, category);
+  if (!cat) return { title: "Catégorie introuvable" };
+  return {
+    title: cat.name,
+    description: cat.description ?? `Découvrez notre sélection ${cat.name.toLowerCase()}.`,
+  };
+}
 
 interface PageProps {
   params: Promise<{ category: string }>;

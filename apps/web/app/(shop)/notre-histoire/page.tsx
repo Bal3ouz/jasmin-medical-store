@@ -1,5 +1,12 @@
-import { AiryContainer, BodyText, H1Editorial, H2Section, JasmineSprig, LabelEyebrow } from "@jasmin/ui";
 import { VOICE } from "@jasmin/lib";
+import {
+  AiryContainer,
+  BodyText,
+  H1Editorial,
+  H2Section,
+  JasmineSprig,
+  LabelEyebrow,
+} from "@jasmin/ui";
 
 export const revalidate = 86400;
 
@@ -33,8 +40,8 @@ export default function NotreHistoirePage() {
             </BodyText>
             <BodyText className="mt-4">
               De la cosmétique aux matériels médicaux, en passant par l'orthopédie, nous choisissons
-              des marques qui respectent la peau, le corps et la planète. Notre équipe vous accompagne
-              avec une expertise dermo-cosmétique reconnue.
+              des marques qui respectent la peau, le corps et la planète. Notre équipe vous
+              accompagne avec une expertise dermo-cosmétique reconnue.
             </BodyText>
           </div>
           <div className="space-y-6">
@@ -55,13 +62,24 @@ export default function NotreHistoirePage() {
           <H2Section className="text-center">Nos engagements</H2Section>
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {[
-              { title: "Sélection rigoureuse", body: "Seules les marques en lesquelles nous croyons trouvent leur place dans nos rayons." },
-              { title: "Conseils personnalisés", body: "Notre équipe vous écoute et vous oriente avec une expertise reconnue." },
-              { title: "Au cœur de Nabeul", body: "Une boutique ancrée dans la ville et ouverte sur la Méditerranée." },
+              {
+                title: "Sélection rigoureuse",
+                body: "Seules les marques en lesquelles nous croyons trouvent leur place dans nos rayons.",
+              },
+              {
+                title: "Conseils personnalisés",
+                body: "Notre équipe vous écoute et vous oriente avec une expertise reconnue.",
+              },
+              {
+                title: "Au cœur de Nabeul",
+                body: "Une boutique ancrée dans la ville et ouverte sur la Méditerranée.",
+              },
             ].map((c) => (
               <article key={c.title} className="rounded-lg bg-cream-sand p-6 shadow-soft">
                 <JasmineSprig className="h-10 w-10 text-jasmine" />
-                <h3 className="mt-4 font-[var(--font-display)] text-xl italic text-deep-teal">{c.title}</h3>
+                <h3 className="mt-4 font-[var(--font-display)] text-xl italic text-deep-teal">
+                  {c.title}
+                </h3>
                 <BodyText className="mt-3">{c.body}</BodyText>
               </article>
             ))}

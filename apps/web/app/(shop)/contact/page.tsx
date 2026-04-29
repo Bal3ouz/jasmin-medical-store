@@ -1,5 +1,5 @@
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { AiryContainer, BodyText, H1Editorial, LabelEyebrow } from "@jasmin/ui";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 export const revalidate = 86400;
 
@@ -10,7 +10,9 @@ export default function ContactPage() {
         <div className="mx-auto grid max-w-[1200px] gap-12 lg:grid-cols-2">
           <div>
             <LabelEyebrow>Contact</LabelEyebrow>
-            <H1Editorial className="mt-6 text-deep-teal text-5xl">Venez nous rendre visite.</H1Editorial>
+            <H1Editorial className="mt-6 text-deep-teal text-5xl">
+              Venez nous rendre visite.
+            </H1Editorial>
             <BodyText className="mt-6 max-w-xl">
               Notre équipe vous accueille du lundi au samedi pour répondre à vos questions et vous
               accompagner dans votre routine bien-être.
@@ -20,10 +22,15 @@ export default function ContactPage() {
                 111 Av. Hedi Nouira, 8000 Nabeul (en face Clinique El Amen)
               </Info>
               <Info icon={<Phone className="h-5 w-5" />} title="Téléphone">
-                <a href="tel:+21672289900" className="underline-offset-4 hover:underline">+216 72 289 900</a>
+                <a href="tel:+21672289900" className="underline-offset-4 hover:underline">
+                  +216 72 289 900
+                </a>
               </Info>
               <Info icon={<Mail className="h-5 w-5" />} title="Email">
-                <a href="mailto:jasmin.medicalstore@yahoo.com" className="underline-offset-4 hover:underline">
+                <a
+                  href="mailto:jasmin.medicalstore@yahoo.com"
+                  className="underline-offset-4 hover:underline"
+                >
                   jasmin.medicalstore@yahoo.com
                 </a>
               </Info>
@@ -46,12 +53,18 @@ export default function ContactPage() {
   );
 }
 
-function Info({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function Info({
+  icon,
+  title,
+  children,
+}: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-4">
       <span className="mt-1 text-deep-teal">{icon}</span>
       <span>
-        <span className="block font-[var(--font-label)] text-[10px] uppercase tracking-[0.24em] text-warm-taupe-soft">{title}</span>
+        <span className="block font-[var(--font-label)] text-[10px] uppercase tracking-[0.24em] text-warm-taupe-soft">
+          {title}
+        </span>
         <span className="mt-1 block">{children}</span>
       </span>
     </li>

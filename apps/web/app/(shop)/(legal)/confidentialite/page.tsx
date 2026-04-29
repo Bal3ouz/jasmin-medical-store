@@ -7,7 +7,9 @@ export default function ConfidentialitePage() {
     <main>
       <AiryContainer className="px-6 py-20 lg:px-12">
         <article className="mx-auto max-w-3xl space-y-6">
-          <H1Editorial className="text-4xl text-deep-teal">Politique de confidentialité</H1Editorial>
+          <H1Editorial className="text-4xl text-deep-teal">
+            Politique de confidentialité
+          </H1Editorial>
           <BodyText>
             Vos données personnelles sont collectées par Jasmin Médical Store dans le seul but de
             traiter vos commandes et de vous tenir informé(e) de nos actualités si vous y avez

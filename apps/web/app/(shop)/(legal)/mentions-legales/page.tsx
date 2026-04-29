@@ -10,8 +10,8 @@ export default function MentionsLegalesPage() {
           <H1Editorial className="text-4xl text-deep-teal">Mentions légales</H1Editorial>
           <H2Section className="text-2xl">Éditeur du site</H2Section>
           <BodyText>
-            Jasmin Médical Store · 111 Av. Hedi Nouira, 8000 Nabeul, Tunisie · Téléphone +216 72 289 900 ·
-            Email jasmin.medicalstore@yahoo.com.
+            Jasmin Médical Store · 111 Av. Hedi Nouira, 8000 Nabeul, Tunisie · Téléphone +216 72 289
+            900 · Email jasmin.medicalstore@yahoo.com.
           </BodyText>
           <H2Section className="text-2xl">Hébergement</H2Section>
           <BodyText>
@@ -20,8 +20,8 @@ export default function MentionsLegalesPage() {
           </BodyText>
           <H2Section className="text-2xl">Propriété intellectuelle</H2Section>
           <BodyText>
-            L'ensemble du contenu (textes, photos, logos) est la propriété exclusive de Jasmin Médical
-            Store. Toute reproduction sans autorisation écrite est interdite.
+            L'ensemble du contenu (textes, photos, logos) est la propriété exclusive de Jasmin
+            Médical Store. Toute reproduction sans autorisation écrite est interdite.
           </BodyText>
         </article>
       </AiryContainer>
