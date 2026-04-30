@@ -1,0 +1,50 @@
+# Jasmin Médical Store — production compose
+#
+# Two Next.js services. Both bind to 127.0.0.1 only, never directly to the
+# public interface — Caddy on the host handles TLS + reverse proxy.
+#
+# Env values are read from `.env.production` (next to this file). Don't
+# commit it; provision it on the server. See `.env.production.example`.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: web
+    image: jasmin-web:latest
+    container_name: jasmin-web
+    restart: unless-stopped
+    env_file: .env.production
+    ports:
+      - "127.0.0.1:4000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: admin
+    image: jasmin-admin:latest
+    container_name: jasmin-admin
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      # Admin app starts on port 3000 inside the container regardless of which
+      # PORT it ran on locally — Caddy maps the public host onto 4001.
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:4001:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
