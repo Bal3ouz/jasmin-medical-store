@@ -187,3 +187,94 @@ export async function listLowStockItems(db: Database, limit = 8): Promise<Dashbo
     brandName: r.brandName,
   }));
 }
+
+/* -------------------------------------------------------------------------- */
+/* Hero visualisations (admin home)                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Daily revenue + order-count series for the last N days. Designed for the
+ * dashboard hero combo chart: revenue area + order-count bars on the same
+ * X axis. Excludes cancelled / refunded orders. Days with zero orders are
+ * still represented so the X axis is contiguous.
+ */
+export interface DashboardActivityPoint {
+  date: string; // YYYY-MM-DD
+  revenue: number;
+  orders: number;
+}
+
+export async function getDashboardActivity(
+  db: Database,
+  days = 30,
+): Promise<DashboardActivityPoint[]> {
+  const res = await db.execute(sql`
+    WITH days AS (
+      SELECT generate_series(
+        (current_date - (${days - 1})::int),
+        current_date,
+        '1 day'::interval
+      )::date AS day
+    ),
+    daily AS (
+      SELECT date_trunc('day', created_at)::date AS day,
+             COALESCE(SUM(total_tnd), 0)::float  AS revenue,
+             COUNT(*)::int                       AS orders
+      FROM orders
+      WHERE status NOT IN ('cancelled','refunded')
+        AND created_at >= (current_date - (${days - 1})::int)
+      GROUP BY 1
+    )
+    SELECT to_char(d.day, 'YYYY-MM-DD') AS date,
+           COALESCE(daily.revenue, 0)::float AS revenue,
+           COALESCE(daily.orders, 0)::int    AS orders
+    FROM days d
+    LEFT JOIN daily ON daily.day = d.day
+    ORDER BY d.day ASC
+  `);
+  const rows = (Array.isArray(res) ? res : (res as { rows: unknown[] }).rows) as Array<{
+    date: string;
+    revenue: number;
+    orders: number;
+  }>;
+  return rows.map((r) => ({
+    date: r.date,
+    revenue: Number(r.revenue) || 0,
+    orders: Number(r.orders) || 0,
+  }));
+}
+
+/**
+ * Order-status counts over the last N days. Drives the donut on the
+ * dashboard hero. Returns one row per status that has at least one order
+ * in the window — empty slices are dropped client-side.
+ */
+export interface DashboardStatusSlice {
+  status:
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
+  count: number;
+}
+
+export async function getDashboardStatusBreakdown(
+  db: Database,
+  days = 30,
+): Promise<DashboardStatusSlice[]> {
+  const res = await db.execute(sql`
+    SELECT status, COUNT(*)::int AS count
+    FROM orders
+    WHERE created_at >= (current_date - (${days - 1})::int)
+    GROUP BY status
+    ORDER BY count DESC
+  `);
+  const rows = (Array.isArray(res) ? res : (res as { rows: unknown[] }).rows) as Array<{
+    status: DashboardStatusSlice["status"];
+    count: number;
+  }>;
+  return rows.map((r) => ({ status: r.status, count: Number(r.count) }));
+}

@@ -1,5 +1,6 @@
 "use server";
 import { ensureSessionCookie } from "@/lib/cart/server";
+import { ensureCustomerRow } from "@/lib/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createClient } from "@jasmin/db";
 import { cartItems, carts } from "@jasmin/db/schema";
@@ -18,12 +19,17 @@ export async function signUpAction(formData: FormData): Promise<AuthResult> {
   if (!email || !password) return { ok: false, error: "Email et mot de passe requis." };
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { full_name: fullName } },
   });
   if (error) return { ok: false, error: error.message };
+
+  const dbUrl = process.env.SUPABASE_DB_URL;
+  if (data.user && dbUrl) {
+    await ensureCustomerRow(createClient(dbUrl), data.user);
+  }
   redirect("/compte");
 }
 
@@ -39,6 +45,7 @@ export async function signInAction(formData: FormData): Promise<AuthResult> {
   const dbUrl = process.env.SUPABASE_DB_URL;
   if (dbUrl) {
     const db = createClient(dbUrl);
+    await ensureCustomerRow(db, data.user);
     const sessionId = await ensureSessionCookie();
     const guestCart = (await db.select().from(carts).where(eq(carts.sessionId, sessionId)))[0];
     if (guestCart) {

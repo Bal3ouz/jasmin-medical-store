@@ -10,6 +10,12 @@ export const customers = pgTable("customers", {
   newsletterSubscribed: boolean("newsletter_subscribed").notNull().default(false),
   defaultShippingAddressId: uuid("default_shipping_address_id"),
   defaultBillingAddressId: uuid("default_billing_address_id"),
+  /**
+   * `true` for shoppers who placed an order via guest checkout (no auth
+   * account). Lets the admin distinguish "members" from "guests" without
+   * splitting tables.
+   */
+  isGuest: boolean("is_guest").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

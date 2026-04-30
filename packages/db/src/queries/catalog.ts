@@ -30,6 +30,8 @@ export interface ListPublishedProductsOptions {
   limit?: number;
   offset?: number;
   sort?: "newest" | "price-asc" | "price-desc";
+  /** Restrict to products flagged `is_promo` by the admin. */
+  onlyPromo?: boolean;
 }
 
 export async function listCategories(db: Database) {
@@ -76,6 +78,9 @@ export async function listPublishedProducts(
     const brand = brandRows[0];
     if (!brand) return [];
     conds.push(eq(products.brandId, brand.id));
+  }
+  if (opts.onlyPromo) {
+    conds.push(eq(products.isPromo, true));
   }
 
   const orderBy =

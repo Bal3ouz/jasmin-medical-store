@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 to scan our shared UI package — class names used inside
+   @jasmin/ui won't otherwise generate utilities since v4 only walks each
+   consumer app's own tree by default. */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
 @theme {
   --color-cream-sand: #faf6f0;
   --color-linen: #f2ebdf;

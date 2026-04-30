@@ -18,23 +18,23 @@ export interface CreateClientOptions {
 }
 
 /**
- * Per-(URL, max) singleton pool.
- *
- * Next.js dev mode reloads server modules on file change, and every server
- * action / RSC page calling `createClient(url)` previously spawned a fresh
- * postgres-js pool. Under load (concurrent E2E specs, many admin queries)
- * those accumulate and exhaust Postgres' default 100-connection cap.
- *
- * Caching by URL is safe — the URL is the only thing that distinguishes a
- * connection target. Production SUPABASE_DB_URL is set once per process.
+ * Per-(URL, max) singleton pool, parked on `globalThis` so it survives Next.js
+ * HMR. Without this, every hot reload of a server-action or RSC page creates a
+ * fresh postgres-js pool while the old ones keep their connections — within
+ * a few minutes Postgres' 100-connection cap is hit and every query starts
+ * failing with `remaining connection slots are reserved for roles…`.
  */
-const _pools = new Map<string, ReturnType<typeof drizzle<typeof schema>>>();
+const POOL_KEY = Symbol.for("jasmin.db.pools");
+type PoolMap = Map<string, ReturnType<typeof drizzle<typeof schema>>>;
+const globalAny = globalThis as { [POOL_KEY]?: PoolMap };
+const _pools: PoolMap = globalAny[POOL_KEY] ?? new Map();
+globalAny[POOL_KEY] = _pools;
 
-export function createClient(databaseUrl: string, { max = 5 }: CreateClientOptions = {}) {
+export function createClient(databaseUrl: string, { max = 2 }: CreateClientOptions = {}) {
   const key = `${databaseUrl}|${max}`;
   let db = _pools.get(key);
   if (!db) {
-    const sql = postgres(databaseUrl, { max, prepare: false });
+    const sql = postgres(databaseUrl, { max, prepare: false, idle_timeout: 20 });
     db = drizzle(sql, { schema });
     _pools.set(key, db);
   }

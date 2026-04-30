@@ -56,7 +56,7 @@ export async function getBestSellers(
     LEFT JOIN brands b     ON b.id = p.brand_id
     LEFT JOIN categories c ON c.id = p.category_id
     WHERE o.status NOT IN ('cancelled','refunded')
-      AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+      AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
       AND (${categoryId}::uuid IS NULL OR p.category_id = ${categoryId}::uuid)
     GROUP BY p.id, p.slug, p.name, b.name, c.name
     ORDER BY ${order}

@@ -53,7 +53,7 @@ export async function getTurnover(
       FROM order_items oi
       JOIN orders o ON o.id = oi.order_id
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
       GROUP BY oi.product_id, oi.variant_id
     )
     SELECT i.product_id            AS product_id,
@@ -108,7 +108,7 @@ export async function getDeadStock(
       FROM order_items oi
       JOIN orders o ON o.id = oi.order_id
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
       GROUP BY oi.product_id, oi.variant_id
     ),
     last_sale AS (

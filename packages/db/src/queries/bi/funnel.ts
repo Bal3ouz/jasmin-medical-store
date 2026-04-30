@@ -42,7 +42,7 @@ export async function getNewsletterFunnel(
     WITH subs AS (
       SELECT email
       FROM newsletter_subscribers
-      WHERE (${p.since}::timestamptz IS NULL OR created_at >= ${p.since})
+      WHERE (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR created_at >= ${p.since === null ? null : p.since.toISOString()})
     ),
     ordered AS (
       SELECT DISTINCT s.email
@@ -52,7 +52,7 @@ export async function getNewsletterFunnel(
               SELECT id FROM customers WHERE email = s.email))
         OR LOWER(o.guest_email) = LOWER(s.email)
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
     )
     SELECT (SELECT COUNT(*) FROM subs)::int    AS subscribers,
            (SELECT COUNT(*) FROM ordered)::int AS subscribers_who_ordered

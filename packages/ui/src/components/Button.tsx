@@ -15,9 +15,9 @@ const buttonStyles = cva(
         link: "text-deep-teal underline underline-offset-4 hover:text-deep-teal-dark",
       },
       size: {
-        sm: "h-9 px-4 text-sm rounded-pill",
-        md: "h-11 px-6 text-base rounded-pill",
-        lg: "h-14 px-8 text-base rounded-pill",
+        sm: "min-h-10 px-5 py-2 text-sm rounded-pill",
+        md: "min-h-12 px-7 py-3 text-base rounded-pill",
+        lg: "min-h-14 px-10 py-4 text-base rounded-pill",
       },
     },
     defaultVariants: { variant: "primary-teal", size: "md" },

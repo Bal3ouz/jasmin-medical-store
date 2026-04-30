@@ -43,6 +43,20 @@
       "when": 1777403313824,
       "tag": "0005_mute_peter_quill",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777475374125,
+      "tag": "0006_add_is_guest",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777548236924,
+      "tag": "0007_add_is_promo",
+      "breakpoints": true
     }
   ]
 }

@@ -18,7 +18,7 @@ function pickRows<T>(res: unknown): T[] {
 }
 
 export async function getSalesKpis(db: Database, p: { since: Date | null }): Promise<SalesKpis> {
-  const since = p.since;
+  const since = p.since === null ? null : p.since.toISOString();
   const rows = await db.execute<{
     total_revenue: string | number | null;
     order_count: number;
@@ -71,7 +71,7 @@ export async function getSalesTrend(
       COUNT(*)::int                                  AS orders
     FROM orders
     WHERE status NOT IN ('cancelled','refunded')
-      AND (${p.since}::timestamptz IS NULL OR created_at >= ${p.since})
+      AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR created_at >= ${p.since === null ? null : p.since.toISOString()})
     GROUP BY 1
     ORDER BY 1 ASC
   `);

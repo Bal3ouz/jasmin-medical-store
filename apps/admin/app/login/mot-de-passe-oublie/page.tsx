@@ -9,7 +9,9 @@ export default async function ForgotPasswordPage({
   const params = await searchParams;
   return (
     <AiryContainer className="min-h-screen px-8 py-24 lg:px-24">
-      <Logo />
+      <span className="inline-flex rounded-2xl bg-deep-teal p-3 shadow-soft">
+        <Logo size="sm" />
+      </span>
       <div className="mx-auto mt-16 max-w-md">
         <H1Editorial className="text-deep-teal text-4xl">Mot de passe oublié</H1Editorial>
         <BodyText className="mt-4">Recevez un lien pour le réinitialiser.</BodyText>

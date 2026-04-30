@@ -56,7 +56,7 @@ export async function getCohortsMonthly(
       FROM first_order fo
       JOIN orders o ON o.customer_id = fo.customer_id
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR fo.cohort_month >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR fo.cohort_month >= ${p.since === null ? null : p.since.toISOString()})
       GROUP BY fo.cohort_month, o.customer_id
     )
     SELECT cohort_month::date AS cohort_month,

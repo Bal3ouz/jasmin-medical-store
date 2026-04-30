@@ -36,6 +36,9 @@ export const products = pgTable(
     weightG: integer("weight_g"),
     isPublished: boolean("is_published").notNull().default(false),
     isFeatured: boolean("is_featured").notNull().default(false),
+    /** Curated by admin — surfaces in the home-page "En promo" strip with the
+     *  compare_at strike-through price. */
+    isPromo: boolean("is_promo").notNull().default(false),
     metaTitle: text("meta_title"),
     metaDescription: text("meta_description"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

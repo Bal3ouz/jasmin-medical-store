@@ -374,6 +374,29 @@ export async function publishProductAction(formData: FormData) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* togglePromoAction                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Curated promo flag — surfaces a product on the home-page "En promo" strip.
+ * No audit entry needed (low-risk merchandising knob); admins/managers only.
+ */
+export async function togglePromoAction(formData: FormData) {
+  await assertRole(["admin", "manager"]);
+  const id = String(formData.get("id") ?? "");
+  const isPromo = formData.get("isPromo") === "true";
+  if (!id) return { ok: false as const };
+  await db()
+    .update(products)
+    .set({ isPromo, updatedAt: new Date() })
+    .where(eq(products.id, id));
+  revalidatePath("/catalogue/produits");
+  revalidatePath(`/catalogue/produits/${id}`);
+  revalidatePath("/", "layout");
+  return { ok: true as const };
+}
+
+/* -------------------------------------------------------------------------- */
 /* duplicateProductAction                                                     */
 /* -------------------------------------------------------------------------- */
 

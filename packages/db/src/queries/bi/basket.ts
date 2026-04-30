@@ -54,19 +54,19 @@ export async function getBasketPairs(
         ON oi1.order_id = oi2.order_id AND oi1.product_id < oi2.product_id
       JOIN orders o ON o.id = oi1.order_id
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
     ),
     totals AS (
       SELECT GREATEST(COUNT(DISTINCT o.id), 1)::int AS n_orders
       FROM orders o
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
     ),
     freq AS (
       SELECT oi.product_id, COUNT(DISTINCT o.id)::int AS n
       FROM order_items oi JOIN orders o ON o.id = oi.order_id
       WHERE o.status NOT IN ('cancelled','refunded')
-        AND (${p.since}::timestamptz IS NULL OR o.created_at >= ${p.since})
+        AND (${p.since === null ? null : p.since.toISOString()}::timestamptz IS NULL OR o.created_at >= ${p.since === null ? null : p.since.toISOString()})
       GROUP BY oi.product_id
     )
     SELECT co.a,

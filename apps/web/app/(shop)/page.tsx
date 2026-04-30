@@ -1,6 +1,8 @@
 import { BrandMarqueeStrip } from "@/components/landing/BrandMarqueeStrip";
 import { CategoryShowcase } from "@/components/landing/CategoryShowcase";
 import { EditorialQuote } from "@/components/landing/EditorialQuote";
+import { PromoStrip } from "@/components/landing/PromoStrip";
+import { SensorialMoment } from "@/components/landing/SensorialMoment";
 import { TealHeroPanel } from "@jasmin/ui";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
@@ -21,8 +23,12 @@ export default function HomePage() {
       <LandingHeroAnimated />
       <BrandMarqueeStrip />
       <Suspense fallback={null}>
+        <PromoStrip />
+      </Suspense>
+      <Suspense fallback={null}>
         <CategoryShowcase />
       </Suspense>
+      <SensorialMoment />
       <EditorialQuote />
     </main>
   );

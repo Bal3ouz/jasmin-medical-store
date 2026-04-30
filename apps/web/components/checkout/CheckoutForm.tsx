@@ -2,6 +2,8 @@
 import { type CheckoutResult, createOrderAction } from "@/app/actions/checkout";
 import { VOICE } from "@jasmin/lib";
 import { BodyText, Button, Input } from "@jasmin/ui";
+import { Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { PaymentMethodPicker } from "./PaymentMethodPicker";
 import { ShippingAddressForm } from "./ShippingAddressForm";
@@ -9,6 +11,7 @@ import { ShippingAddressForm } from "./ShippingAddressForm";
 export function CheckoutForm({ isGuest }: { isGuest: boolean }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [createAccount, setCreateAccount] = useState(false);
 
   return (
     <form
@@ -21,6 +24,33 @@ export function CheckoutForm({ isGuest }: { isGuest: boolean }) {
       }}
       className="space-y-10"
     >
+      {isGuest && (
+        <aside className="flex flex-wrap items-start gap-4 rounded-2xl border border-jasmine/40 bg-jasmine/15 p-5">
+          <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-jasmine/40 text-deep-teal">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-[var(--font-display)] text-deep-teal text-lg italic">
+              Créez votre espace en 30 secondes
+            </h3>
+            <p className="mt-1 font-[var(--font-body)] text-sm leading-[1.5] text-warm-taupe">
+              Suivez vos commandes, retrouvez votre carnet d&apos;adresses et gagnez des
+              échantillons offerts dès la prochaine livraison.
+            </p>
+            <p className="mt-3 text-warm-taupe-soft text-xs">
+              Déjà inscrit ?{" "}
+              <Link
+                href="/compte/connexion?next=/commande"
+                className="font-medium text-deep-teal underline underline-offset-2 hover:text-deep-teal-dark"
+              >
+                Connectez-vous
+              </Link>{" "}
+              pour aller plus vite.
+            </p>
+          </div>
+        </aside>
+      )}
+
       <section>
         <h2 className="font-[var(--font-display)] text-2xl italic text-deep-teal">
           Adresse de livraison
@@ -55,6 +85,24 @@ export function CheckoutForm({ isGuest }: { isGuest: boolean }) {
               <Input name="guestPhone" type="tel" required placeholder="+216 …" />
             </label>
           </div>
+
+          <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-lg border border-linen bg-linen/40 p-4 transition-colors hover:border-deep-teal/30">
+            <input
+              type="checkbox"
+              name="createAccount"
+              checked={createAccount}
+              onChange={(e) => setCreateAccount(e.target.checked)}
+              className="mt-1 accent-deep-teal"
+            />
+            <span>
+              <span className="block font-[var(--font-body)] font-medium text-warm-taupe">
+                Créer mon compte avec ces informations
+              </span>
+              <span className="mt-1 block font-[var(--font-body)] text-sm text-warm-taupe-soft">
+                Un email vous sera envoyé pour définir votre mot de passe.
+              </span>
+            </span>
+          </label>
         </section>
       )}
 

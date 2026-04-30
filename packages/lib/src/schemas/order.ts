@@ -31,12 +31,7 @@ export const CheckoutSchema = z
     guestPhone: tunisianPhone.optional().nullable(),
     shipping: ShippingAddressSchema,
     items: z.array(OrderItemDraftSchema).min(1),
-    paymentMethod: z.enum([
-      "cash_on_delivery",
-      "card_konnect",
-      "card_clic_to_pay",
-      "bank_transfer",
-    ]),
+    paymentMethod: z.literal("cash_on_delivery").default("cash_on_delivery"),
     notesCustomer: z.string().max(500).optional().nullable(),
   })
   .refine((c) => !!c.customerId || (!!c.guestEmail && !!c.guestPhone), {

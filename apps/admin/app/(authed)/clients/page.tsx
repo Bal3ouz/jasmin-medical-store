@@ -70,7 +70,16 @@ export default async function CustomersPage(props: {
               key: "fullName",
               header: "Nom",
               sortKey: "fullName",
-              cell: (r) => <span className="font-medium text-warm-taupe">{r.fullName ?? "—"}</span>,
+              cell: (r) => (
+                <span className="flex items-center gap-2">
+                  <span className="font-medium text-warm-taupe">{r.fullName ?? "—"}</span>
+                  {r.isGuest ? (
+                    <span className="rounded-full bg-warm-taupe/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-warm-taupe-soft">
+                      Invité
+                    </span>
+                  ) : null}
+                </span>
+              ),
             },
             {
               key: "email",

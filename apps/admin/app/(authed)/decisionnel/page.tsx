@@ -41,16 +41,33 @@ export default async function DecisionnelOverviewPage(props: {
   }
   const db = createClient(url);
 
-  const [kpis, trend, bestSellers, pairs, reorder, dead, cohorts, funnel] = await Promise.all([
-    getSalesKpis(db, { since: interval.since }),
-    getSalesTrend(db, { since: interval.since, granularity: interval.granularity }),
-    getBestSellers(db, { since: interval.since, sortBy: "qty", limit: 3 }),
-    getBasketPairs(db, { since: interval.since, limit: 3 }),
-    getReorderCandidates(db, { limit: 3 }),
-    getDeadStock(db, { since: interval.since, limit: 3 }),
-    getCohortsMonthly(db, { since: interval.since }),
-    getNewsletterFunnel(db, { since: interval.since }),
-  ]);
+  const queries = {
+    kpis: () => getSalesKpis(db, { since: interval.since }),
+    trend: () => getSalesTrend(db, { since: interval.since, granularity: interval.granularity }),
+    bestSellers: () => getBestSellers(db, { since: interval.since, sortBy: "qty" as const, limit: 3 }),
+    pairs: () => getBasketPairs(db, { since: interval.since, limit: 3 }),
+    reorder: () => getReorderCandidates(db, { limit: 3 }),
+    dead: () => getDeadStock(db, { since: interval.since, limit: 3 }),
+    cohorts: () => getCohortsMonthly(db, { since: interval.since }),
+    funnel: () => getNewsletterFunnel(db, { since: interval.since }),
+  } as const;
+  const settled = await Promise.allSettled(Object.entries(queries).map(async ([k, fn]) => {
+    try {
+      return [k, await fn()] as const;
+    } catch (err) {
+      console.error(`[bi] ${k} failed:`, err);
+      throw err;
+    }
+  }));
+  // Throw the first rejection (preserves the original behaviour) but
+  // we now have console.error noise pinpointing the failing helper.
+  for (const r of settled) if (r.status === "rejected") throw r.reason;
+  const result = Object.fromEntries(settled.map((r) => (r as PromiseFulfilledResult<readonly [string, unknown]>).value)) as {
+    kpis: SalesKpis; trend: { bucket: Date; revenue: number; orders: number; aov: number }[];
+    bestSellers: BestSellerRow[]; pairs: BasketPair[]; reorder: ReorderRow[];
+    dead: DeadStockRow[]; cohorts: CohortRow[]; funnel: NewsletterFunnel;
+  };
+  const { kpis, trend, bestSellers, pairs, reorder, dead, cohorts, funnel } = result;
 
   const trendChartData = trend.map((t) => ({ revenue: t.revenue }));
   const latestCohort: CohortRow | undefined = cohorts[0];

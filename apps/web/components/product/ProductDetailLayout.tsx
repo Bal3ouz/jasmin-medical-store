@@ -105,7 +105,7 @@ export function ProductDetailLayout({ detail }: { detail: ProductDetail }) {
         <div className="mt-2 flex items-center gap-3 border-t border-linen pt-4 font-[var(--font-label)] text-[10px] uppercase tracking-[0.24em] text-warm-taupe-soft">
           <span>Paiement à la livraison</span>
           <span aria-hidden>·</span>
-          <span className="opacity-60">Carte bancaire (bientôt)</span>
+          <span>Livraison sous 48h</span>
         </div>
       </div>
     </div>

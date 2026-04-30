@@ -1,9 +1,10 @@
 "use server";
 import { ensureSessionCookie, findOrCreateCart } from "@/lib/cart/server";
+import { ensureCustomerRow } from "@/lib/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createClient } from "@jasmin/db";
 import { cartItems } from "@jasmin/db/schema";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export interface CartActionResult {
@@ -17,9 +18,13 @@ function getDb() {
   return createClient(url);
 }
 
-async function authContext(): Promise<{ customerId: string | null; sessionId: string }> {
+async function authContext(db: ReturnType<typeof getDb>): Promise<{
+  customerId: string | null;
+  sessionId: string;
+}> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
+  if (data.user) await ensureCustomerRow(db, data.user);
   const customerId = data.user?.id ?? null;
   const sessionId = await ensureSessionCookie();
   return { customerId, sessionId };
@@ -33,7 +38,7 @@ export async function addToCartAction(formData: FormData): Promise<CartActionRes
   if (!productId) return { ok: false, error: "Produit invalide." };
 
   const db = getDb();
-  const { customerId, sessionId } = await authContext();
+  const { customerId, sessionId } = await authContext(db);
   const cartId = await findOrCreateCart(db, customerId, sessionId);
 
   // Find existing line with same product+variant combo

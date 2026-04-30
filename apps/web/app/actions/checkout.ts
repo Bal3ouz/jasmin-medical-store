@@ -1,11 +1,14 @@
 "use server";
 import { ensureSessionCookie } from "@/lib/cart/server";
+import { ensureCustomerRow } from "@/lib/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createClient } from "@jasmin/db";
 import {
   brands,
   cartItems,
   carts,
+  customerAddresses,
+  customers,
   inventory,
   orderEvents,
   orderItems,
@@ -34,6 +37,7 @@ export async function createOrderAction(formData: FormData): Promise<CheckoutRes
 
   const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
+  if (userData.user) await ensureCustomerRow(db, userData.user);
   const customerId = userData.user?.id ?? null;
   const sessionId = await ensureSessionCookie();
 
@@ -120,6 +124,23 @@ export async function createOrderAction(formData: FormData): Promise<CheckoutRes
       const shippingFee = subtotal > 200 ? 0 : 7;
       const total = subtotal + shippingFee;
 
+      // Self-heal the sequence so seeded orders (which assign their own
+      // numbers without bumping the sequence) don't collide with new ones.
+      // Pulls the largest tail integer out of every existing order_number
+      // and lifts the sequence to that value if needed.
+      await tx.execute(sql`
+        SELECT setval(
+          'jms_order_seq',
+          GREATEST(
+            COALESCE(
+              (SELECT MAX((regexp_match(order_number, '(\\d+)$'))[1]::int) FROM orders),
+              0
+            ),
+            (SELECT last_value FROM jms_order_seq)
+          )
+        )
+      `);
+
       const seqResult = await tx.execute<{ seq: string | number }>(
         sql`SELECT nextval('jms_order_seq') AS seq`,
       );
@@ -128,11 +149,65 @@ export async function createOrderAction(formData: FormData): Promise<CheckoutRes
       const year = new Date().getFullYear();
       const formattedOrderNumber = generateOrderNumber({ year, sequence });
 
+      // Guest checkout: idempotently create a `customers` row tagged
+      // is_guest=true so the admin sees the shopper alongside members.
+      let effectiveCustomerId: string | null = checkout.customerId ?? null;
+      if (!effectiveCustomerId && checkout.guestEmail) {
+        const newId = crypto.randomUUID();
+        await tx
+          .insert(customers)
+          .values({
+            id: newId,
+            email: checkout.guestEmail,
+            fullName: checkout.shipping.fullName,
+            phone: checkout.guestPhone ?? checkout.shipping.phone,
+            isGuest: true,
+          })
+          .onConflictDoNothing();
+        const existing = await tx
+          .select({ id: customers.id })
+          .from(customers)
+          .where(eq(customers.email, checkout.guestEmail));
+        effectiveCustomerId = existing[0]?.id ?? null;
+      }
+
+      // Persist shipping address into the customer's address book so the
+      // admin sees it under their profile. Skips silently if a matching
+      // address already exists (same street + postal code).
+      if (effectiveCustomerId) {
+        const existingAddrs = await tx
+          .select({
+            id: customerAddresses.id,
+            street: customerAddresses.street,
+            postalCode: customerAddresses.postalCode,
+          })
+          .from(customerAddresses)
+          .where(eq(customerAddresses.customerId, effectiveCustomerId));
+        const dup = existingAddrs.find(
+          (a) =>
+            a.street === checkout.shipping.street &&
+            a.postalCode === checkout.shipping.postalCode,
+        );
+        if (!dup) {
+          await tx.insert(customerAddresses).values({
+            customerId: effectiveCustomerId,
+            fullName: checkout.shipping.fullName,
+            phone: checkout.shipping.phone,
+            street: checkout.shipping.street,
+            city: checkout.shipping.city,
+            postalCode: checkout.shipping.postalCode,
+            governorate: checkout.shipping.governorate,
+            country: checkout.shipping.country,
+            isDefault: existingAddrs.length === 0,
+          });
+        }
+      }
+
       const insertedOrder = await tx
         .insert(orders)
         .values({
           orderNumber: formattedOrderNumber,
-          customerId: checkout.customerId ?? null,
+          customerId: effectiveCustomerId,
           guestEmail: checkout.guestEmail ?? null,
           guestPhone: checkout.guestPhone ?? null,
           shippingFullName: checkout.shipping.fullName,

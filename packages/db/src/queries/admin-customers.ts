@@ -27,6 +27,7 @@ export interface AdminCustomerRow {
   email: string;
   fullName: string | null;
   phone: string | null;
+  isGuest: boolean;
   createdAt: Date;
 }
 
@@ -81,6 +82,7 @@ export async function listCustomersForAdmin(
       email: customers.email,
       fullName: customers.fullName,
       phone: customers.phone,
+      isGuest: customers.isGuest,
       createdAt: customers.createdAt,
     })
     .from(customers)

@@ -1,28 +1,28 @@
 import { cn } from "../cn";
 
 export interface LogoProps {
+  /** @deprecated The image asset is the same regardless of variant. Kept so existing callers compile; pick a dark surface for legibility. */
   variant?: "default" | "cream";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export function Logo({ variant = "default", size = "md", className }: LogoProps) {
-  const colour = variant === "cream" ? "text-cream-sand" : "text-deep-teal";
-  const wordmarkSize = { sm: "text-2xl", md: "text-3xl", lg: "text-5xl" }[size];
-  const subSize = { sm: "text-[9px]", md: "text-[10px]", lg: "text-xs" }[size];
+/**
+ * Brand wordmark — `apps/{web,admin}/public/brand/logo-white.png`.
+ *
+ * The asset is white script on transparent — only legible on a dark surface
+ * (deep-teal works best). Callers must place this on a dark backdrop.
+ */
+const SIZE_HEIGHT = { sm: "h-10", md: "h-14", lg: "h-20" } as const;
+
+export function Logo({ size = "md", className }: LogoProps) {
   return (
-    <div className={cn("inline-flex flex-col leading-none", colour, className)}>
-      <span className={cn("font-[var(--font-display)] italic font-medium", wordmarkSize)}>
-        Jasmin
-      </span>
-      <span
-        className={cn(
-          "font-[var(--font-label)] tracking-[0.32em] uppercase opacity-80 mt-0.5",
-          subSize,
-        )}
-      >
-        Médical Store
-      </span>
-    </div>
+    // biome-ignore lint/performance/noImgElement: shared package can't use next/image
+    <img
+      src="/brand/logo-white.png"
+      alt="Jasmin Médical Store"
+      className={cn(SIZE_HEIGHT[size], "w-auto select-none", className)}
+      draggable={false}
+    />
   );
 }

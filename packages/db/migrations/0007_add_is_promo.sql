@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "is_promo" boolean DEFAULT false NOT NULL;

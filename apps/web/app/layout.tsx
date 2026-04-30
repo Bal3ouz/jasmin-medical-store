@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Allura } from "next/font/google";
 import "./globals.css";
+
+const scriptFont = Allura({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-script",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://jasmin-medical-store.com"),
@@ -25,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={scriptFont.variable}>
       <body>{children}</body>
     </html>
   );

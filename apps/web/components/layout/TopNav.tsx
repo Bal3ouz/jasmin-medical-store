@@ -24,17 +24,17 @@ export function TopNav({ variant = "default", CartDrawerSlot }: TopNavProps) {
     <header
       className={
         isOnTeal
-          ? "absolute inset-x-0 top-0 z-30 px-6 py-6 lg:px-12"
-          : "sticky top-0 z-30 border-b border-linen bg-cream-sand/90 px-6 py-4 backdrop-blur lg:px-12"
+          ? "absolute inset-x-0 top-0 z-30 px-6 py-4 lg:px-12"
+          : "sticky top-0 z-30 border-b border-deep-teal-dark/40 bg-deep-teal/95 px-6 py-3 text-cream-sand backdrop-blur lg:px-12"
       }
     >
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6">
         <Link href="/" aria-label="Accueil" className="shrink-0">
-          <Logo variant={isOnTeal ? "cream" : "default"} size="md" />
+          <Logo size="sm" />
         </Link>
         <nav
           aria-label="Navigation principale"
-          className={`hidden items-center gap-7 font-[var(--font-label)] text-sm tracking-wide lg:flex ${isOnTeal ? "text-cream-sand/90" : "text-warm-taupe"}`}
+          className="hidden items-center gap-7 font-[var(--font-label)] text-cream-sand/90 text-sm tracking-wide lg:flex"
         >
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="transition-colors hover:text-jasmine">
@@ -42,20 +42,18 @@ export function TopNav({ variant = "default", CartDrawerSlot }: TopNavProps) {
             </Link>
           ))}
         </nav>
-        <div
-          className={`flex items-center gap-2 ${isOnTeal ? "text-cream-sand" : "text-warm-taupe"}`}
-        >
+        <div className="flex items-center gap-2 text-cream-sand">
           <button
             type="button"
             aria-label="Rechercher"
-            className="hidden h-10 w-10 items-center justify-center rounded-pill transition-colors hover:bg-linen/40 lg:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-pill transition-colors hover:bg-cream-sand/10 lg:inline-flex"
           >
             <Search className="h-5 w-5" />
           </button>
           <Link
             href="/compte"
             aria-label="Mon compte"
-            className="hidden h-10 w-10 items-center justify-center rounded-pill transition-colors hover:bg-linen/40 lg:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-pill transition-colors hover:bg-cream-sand/10 lg:inline-flex"
           >
             <User className="h-5 w-5" />
           </Link>

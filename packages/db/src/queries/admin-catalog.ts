@@ -39,8 +39,10 @@ export interface AdminProductRow {
   slug: string;
   name: string;
   isPublished: boolean;
+  isPromo: boolean;
   hasVariants: boolean;
   priceTnd: string | null;
+  compareAtPriceTnd: string | null;
   brandName: string | null;
   brandId: string;
   createdAt: Date;
@@ -102,8 +104,10 @@ export async function listProductsForAdmin(
       slug: products.slug,
       name: products.name,
       isPublished: products.isPublished,
+      isPromo: products.isPromo,
       hasVariants: products.hasVariants,
       priceTnd: products.priceTnd,
+      compareAtPriceTnd: products.compareAtPriceTnd,
       brandName: brands.name,
       brandId: products.brandId,
       createdAt: products.createdAt,

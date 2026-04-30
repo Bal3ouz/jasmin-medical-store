@@ -59,14 +59,14 @@ export function AdminShell({
   const visible = NAV_ITEMS.filter((i) => i.visibleTo.includes(session.role));
   return (
     <div className="min-h-screen bg-cream-sand">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-linen border-r bg-cream-sand/60 px-6 py-8 lg:flex">
-        <Logo />
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-deep-teal px-6 py-8 text-cream-sand shadow-soft lg:flex">
+        <Logo size="sm" />
         <nav className="mt-12 flex flex-col gap-1 text-sm">
           {visible.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-2 text-warm-taupe hover:bg-linen hover:text-deep-teal"
+              className="rounded-lg px-3 py-2 text-cream-sand/80 transition-colors hover:bg-cream-sand/10 hover:text-jasmine"
             >
               {item.label}
             </Link>

@@ -1,3 +1,4 @@
+import { PromoToggleButton } from "@/components/PromoToggleButton";
 import { createClient } from "@jasmin/db";
 import { listAllBrands, listProductsForAdmin } from "@jasmin/db/queries";
 import { Button, DataTable, H1Editorial, LabelEyebrow, Pill, PriceTag } from "@jasmin/ui";
@@ -126,6 +127,11 @@ export default async function ProductsAdminPage(props: {
                 ) : (
                   <Pill tone="taupe">Brouillon</Pill>
                 ),
+            },
+            {
+              key: "promo",
+              header: "Promo",
+              cell: (r) => <PromoToggleButton id={r.id} isPromo={r.isPromo} />,
             },
           ]}
           rows={rows}
