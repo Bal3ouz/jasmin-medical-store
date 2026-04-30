@@ -3,9 +3,18 @@ import { JasmineSprig, Logo } from "@jasmin/ui";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 
-const STAFF_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login";
+// Read at request time (server component) — `NEXT_PUBLIC_*` vars are inlined
+// at build time, which would bake "localhost" into the production bundle.
+function staffUrl() {
+  return (
+    process.env.ADMIN_URL ||
+    process.env.NEXT_PUBLIC_ADMIN_URL ||
+    "http://localhost:3001/login"
+  );
+}
 
 export function Footer() {
+  const STAFF_URL = staffUrl();
   return (
     <footer className="bg-deep-teal px-6 pb-10 pt-16 text-cream-sand lg:px-12">
       <div className="mx-auto grid max-w-[1400px] gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">

@@ -31,16 +31,15 @@ ARG APP
 ENV APP=${APP}
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /repo
-COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/admin/node_modules ./apps/admin/node_modules
-COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /repo/packages/config/node_modules ./packages/config/node_modules
-COPY --from=deps /repo/packages/db/node_modules ./packages/db/node_modules
-COPY --from=deps /repo/packages/lib/node_modules ./packages/lib/node_modules
-COPY --from=deps /repo/packages/ui/node_modules ./packages/ui/node_modules
+# Bun hoists workspace deps into a single root node_modules; per-package
+# directories are workspace symlinks created on install. Copy the whole tree
+# from the deps stage so the symlinks stay intact.
+COPY --from=deps /repo/ /repo/
 COPY . .
-# Build only the target app — turbo handles workspace deps via package.json.
-RUN bun --filter "@jasmin/${APP}" run build
+# `bun --filter` is flaky inside docker layers (workspace registry not always
+# detected), so cd into the target app and run next build directly. Workspace
+# packages still resolve via the root node_modules symlinks.
+RUN cd apps/${APP} && bun run build
 
 # ---- runtime stage: minimal Bun image with the standalone bundle ----------
 FROM oven/bun:${BUN_VERSION}-slim AS runner
