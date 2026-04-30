@@ -32,4 +32,10 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
+// Skip auth for the login flow, Next's static + image pipelines, and the
+// `/public/*` static assets — the `.*\..*` clause matches any path with a
+// dot, which captures every file extension so logos/icons/manifests don't
+// get redirected through /login.
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+};

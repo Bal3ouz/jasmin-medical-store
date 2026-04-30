@@ -28,7 +28,17 @@ RUN bun install --frozen-lockfile
 # ---- build stage: produce .next/standalone --------------------------------
 FROM oven/bun:${BUN_VERSION} AS builder
 ARG APP
+# `NEXT_PUBLIC_*` env vars are inlined into the JS bundle at build time. We
+# accept them as build args so docker-compose can forward the runtime values
+# in .env.production into the build context — otherwise the bundle ships
+# with empty strings and the Supabase browser client can't connect.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SITE_URL
 ENV APP=${APP}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /repo
 # Bun hoists workspace deps into a single root node_modules; per-package
