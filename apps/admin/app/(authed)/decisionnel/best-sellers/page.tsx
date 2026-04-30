@@ -120,7 +120,7 @@ export default async function BestSellersPage(props: {
             data={top10}
             xKey="name"
             yKey={sortBy === "revenue" ? "revenue" : "qty"}
-            formatY={sortBy === "revenue" ? (v: number) => formatTND(v) : undefined}
+            formatY={sortBy === "revenue" ? "tnd" : undefined}
           />
         )}
       </ReportCard>

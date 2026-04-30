@@ -1,4 +1,5 @@
 "use client";
+import { formatTND } from "@jasmin/lib";
 import {
   Area,
   AreaChart,
@@ -15,6 +16,20 @@ const TICK = {
   fontFamily: "var(--font-label)",
 };
 
+/**
+ * `formatY` is a string token rather than a function so the prop survives the
+ * server→client boundary. Functions get serialized by Next.js, which refuses
+ * non-`use server` callbacks (the trend click in /decisionnel/ventes was
+ * crashing with "Functions cannot be passed directly to Client Components").
+ */
+type FormatY = "tnd" | "int";
+
+function applyFormat(token: FormatY | undefined, v: number): string {
+  if (token === "tnd") return formatTND(v);
+  if (token === "int") return String(Math.round(v));
+  return String(v);
+}
+
 export function SimpleAreaChart<T extends Record<string, unknown>>({
   data,
   xKey,
@@ -25,7 +40,7 @@ export function SimpleAreaChart<T extends Record<string, unknown>>({
   data: T[];
   xKey: keyof T;
   yKey: keyof T;
-  formatY?: (v: number) => string;
+  formatY?: FormatY;
   height?: number;
 }) {
   return (
@@ -33,7 +48,12 @@ export function SimpleAreaChart<T extends Record<string, unknown>>({
       <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-linen)" />
         <XAxis dataKey={xKey as string} tick={TICK} axisLine={false} tickLine={false} />
-        <YAxis tick={TICK} axisLine={false} tickLine={false} tickFormatter={formatY} />
+        <YAxis
+          tick={TICK}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => applyFormat(formatY, v)}
+        />
         <Tooltip
           contentStyle={{
             background: "var(--color-cream-sand)",
@@ -41,7 +61,7 @@ export function SimpleAreaChart<T extends Record<string, unknown>>({
             borderRadius: 12,
             boxShadow: "var(--shadow-soft)",
           }}
-          formatter={(v: number) => (formatY ? formatY(v) : String(v))}
+          formatter={(v: number) => applyFormat(formatY, v)}
         />
         <Area
           dataKey={yKey as string}

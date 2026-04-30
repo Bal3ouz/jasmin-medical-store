@@ -55,9 +55,9 @@ export default async function ProductsAdminPage(props: {
           <LabelEyebrow>Catalogue</LabelEyebrow>
           <H1Editorial className="mt-2 text-4xl text-deep-teal">Produits</H1Editorial>
         </div>
-        <Link href="/catalogue/produits/nouveau">
-          <Button>+ Nouveau produit</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/catalogue/produits/nouveau">+ Nouveau produit</Link>
+        </Button>
       </div>
 
       <form className="mt-8 flex flex-wrap items-end gap-3">

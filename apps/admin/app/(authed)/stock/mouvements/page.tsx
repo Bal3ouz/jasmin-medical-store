@@ -93,9 +93,9 @@ export default async function StockMouvementsPage(props: {
           <LabelEyebrow>Stock</LabelEyebrow>
           <H1Editorial className="mt-2 text-4xl text-deep-teal">Mouvements</H1Editorial>
         </div>
-        <Link href="/stock">
-          <Button variant="ghost">← Retour à l'inventaire</Button>
-        </Link>
+        <Button asChild variant="ghost">
+          <Link href="/stock">← Retour à l'inventaire</Link>
+        </Button>
       </div>
 
       <form className="mt-8 flex flex-wrap items-end gap-3">

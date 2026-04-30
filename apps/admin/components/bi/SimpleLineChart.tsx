@@ -1,4 +1,5 @@
 "use client";
+import { formatTND } from "@jasmin/lib";
 import {
   CartesianGrid,
   Line,
@@ -15,6 +16,14 @@ const TICK = {
   fontFamily: "var(--font-label)",
 };
 
+type FormatY = "tnd" | "int";
+
+function applyFormat(token: FormatY | undefined, v: number): string {
+  if (token === "tnd") return formatTND(v);
+  if (token === "int") return String(Math.round(v));
+  return String(v);
+}
+
 export function SimpleLineChart<T extends Record<string, unknown>>({
   data,
   xKey,
@@ -25,7 +34,8 @@ export function SimpleLineChart<T extends Record<string, unknown>>({
   data: T[];
   xKey: keyof T;
   yKey: keyof T;
-  formatY?: (v: number) => string;
+  /** String token (not a function) so the prop is RSC-serialisable. */
+  formatY?: FormatY;
   height?: number;
 }) {
   return (
@@ -33,7 +43,12 @@ export function SimpleLineChart<T extends Record<string, unknown>>({
       <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-linen)" />
         <XAxis dataKey={xKey as string} tick={TICK} axisLine={false} tickLine={false} />
-        <YAxis tick={TICK} axisLine={false} tickLine={false} tickFormatter={formatY} />
+        <YAxis
+          tick={TICK}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => applyFormat(formatY, v)}
+        />
         <Tooltip
           contentStyle={{
             background: "var(--color-cream-sand)",
@@ -41,7 +56,7 @@ export function SimpleLineChart<T extends Record<string, unknown>>({
             borderRadius: 12,
             boxShadow: "var(--shadow-soft)",
           }}
-          formatter={(v: number) => (formatY ? formatY(v) : String(v))}
+          formatter={(v: number) => applyFormat(formatY, v)}
         />
         <Line
           dataKey={yKey as string}

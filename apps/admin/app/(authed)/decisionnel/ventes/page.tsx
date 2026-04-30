@@ -57,7 +57,7 @@ export default async function VentesPage(props: {
             data={trendChart}
             xKey="date"
             yKey="revenue"
-            formatY={(v) => formatTND(v)}
+            formatY="tnd"
           />
         )}
       </ReportCard>
