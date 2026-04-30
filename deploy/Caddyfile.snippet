@@ -1,14 +1,13 @@
 # Append to /etc/caddy/Caddyfile on the Hetzner host.
-# Caddy will provision Let's Encrypt certs automatically once the A records
-# in GoDaddy point jasminmedical.store and team.jasminmedical.store at
-# 188.245.96.6.
+# DNS already wildcarded for *.data.ghdevlab.com → 188.245.96.6, so Caddy can
+# issue Let's Encrypt certs as soon as it reads these blocks.
 
-jasminmedical.store, www.jasminmedical.store {
+jasmin.data.ghdevlab.com {
     reverse_proxy localhost:4000
     encode gzip zstd
 }
 
-team.jasminmedical.store {
+team.jasmin.data.ghdevlab.com {
     reverse_proxy localhost:4001
     encode gzip zstd
 }

@@ -1,19 +1,12 @@
 # Deploy notes — Hetzner + Caddy
 
 Target server: `188.245.96.6` (SSH alias `ghostdata`, user `data`).
-Domain: `jasminmedical.store` on GoDaddy.
+Domains:
+- Storefront: `jasmin.data.ghdevlab.com`
+- Staff portal: `team.jasmin.data.ghdevlab.com`
 
-## DNS records (set in GoDaddy)
-
-```
-Type  Name  Value          TTL
-A     @     188.245.96.6   600
-A     www   188.245.96.6   600
-A     team  188.245.96.6   600
-```
-
-Wait until `dig +short jasminmedical.store` returns `188.245.96.6` before
-asking Caddy to issue certs (HTTP-01 challenge needs the records live).
+DNS is wildcarded for `*.data.ghdevlab.com`, so both hostnames resolve
+without any record changes.
 
 ## First-time deploy
 
@@ -40,8 +33,8 @@ sudo journalctl -u caddy -n 50 --no-pager   # watch for "certificate obtained"
 Verify:
 
 ```bash
-curl -sI https://jasminmedical.store | head -1          # → HTTP/2 200
-curl -sI https://team.jasminmedical.store/login | head -1
+curl -sI https://jasmin.data.ghdevlab.com | head -1          # → HTTP/2 200
+curl -sI https://team.jasmin.data.ghdevlab.com/login | head -1
 ```
 
 ## Update deploy
