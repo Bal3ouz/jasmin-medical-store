@@ -60,7 +60,7 @@ export function AdminShell({
   return (
     <div className="min-h-screen bg-cream-sand">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-deep-teal px-6 py-8 text-cream-sand shadow-soft lg:flex">
-        <Logo size="sm" />
+        <Logo size="md" className="mx-auto" />
         <nav className="mt-12 flex flex-col gap-1 text-sm">
           {visible.map((item) => (
             <Link
