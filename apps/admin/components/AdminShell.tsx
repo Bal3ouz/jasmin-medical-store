@@ -66,6 +66,13 @@ export function AdminShell({
             <Link
               key={item.href}
               href={item.href}
+              // prefetch=false: every nav item is server-rendered with its
+              // own DB queries; auto-prefetching all of them on render fires
+              // ~10 parallel server renders that each call the middleware
+              // and slow Supabase reads — and a single timeout on any of
+              // them would cache an error and make the click no-op. Disable
+              // prefetch so each click fetches just-in-time.
+              prefetch={false}
               className="rounded-lg px-3 py-2 text-cream-sand/80 transition-colors hover:bg-cream-sand/10 hover:text-jasmine"
             >
               {item.label}
